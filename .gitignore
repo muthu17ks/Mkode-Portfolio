@@ -1,0 +1,30 @@
+# =========================
+# Python & Runtime
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# Virtual Environments
+# =========================
+venv/
+.venv/
+env/
+
+# =========================
+# Security & Config
+# =========================
+.env
+.env.local
+
+# =========================
+# OS & Editor Junk
+# =========================
+.DS_Store
+Thumbs.db
+
+# IDE specific settings
+.vscode/
+.idea/
