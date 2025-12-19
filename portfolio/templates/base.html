@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#0f172a" />
+
+  {% block meta %}{% endblock %}
+
+  <title>{% block title %}Muthukumaran | Full-Stack Developer{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
+
+  <link rel="stylesheet" href="{{ url_for('portfolio.static', filename='css/main.css') }}">
+
+  <link rel="icon" href="{{ url_for('portfolio.static', filename='images/logo-Mkode-icon.png') }}" type="image/png">
+
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('theme') || 'light';
+        const root = document.documentElement;
+        root.classList.add(saved === 'dark' ? 'dark-theme' : 'light-theme');
+      } catch (_) {}
+    })();
+  </script>
+
+  <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.js" defer></script>
+  <script defer src="{{ url_for('portfolio.static', filename='js/main.js') }}"></script>
+
+  {% block head_extra %}{% endblock %}
+</head>
+
+<body>
+
+  <div id="preloader" class="site-preloader">
+    <div class="fluid-loader">
+      <div class="fluid-particle"></div>
+      <div class="fluid-particle"></div>
+      <div class="fluid-particle"></div>
+      <div class="fluid-particle"></div>
+      <div class="fluid-particle"></div>
+    </div>
+    <svg width="0" height="0" class="preloader-utils">
+      <defs>
+        <filter id="fluid-filter">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="ooze" />
+          <feBlend in="SourceGraphic" in2="ooze" />
+        </filter>
+      </defs>
+    </svg>
+  </div>
+
+  {% block navbar %}{% endblock %}
+
+  <div class="cursor" aria-hidden="true">
+    <div class="cursor__dot"></div>
+    <div class="cursor__ring"></div>
+  </div>
+
+  <main id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <p class="footer__copy">
+      © 2025 Muthukumaran — Turning passion for code into real-world solutions.
+    </p>
+  </footer>
+
+  <button id="to-top" class="to-top" aria-label="Back to top" title="Back to top">
+    <i data-lucide="arrow-up" aria-hidden="true"></i>
+  </button>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

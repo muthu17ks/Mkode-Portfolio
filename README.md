@@ -2,7 +2,7 @@
 
 A high-performance personal portfolio website designed to showcase projects and technical skills. Built with a focus on clean architecture, modern UI (Glassmorphism), and responsiveness.
 
-![Project Preview](/static/assets/images/project-portfolio.png)
+![Project Preview](/portfolio/static/images/project-portfolio-thumb.png)
 
 ## 🚀 Features
 

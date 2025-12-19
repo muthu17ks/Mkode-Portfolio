@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}All Projects — Muthukumaran{% endblock %}
+
+{% block navbar %}
+  {% include 'navbar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="main-container projects-list-container">
+
+  <header class="projects__header" style="padding-top: calc(var(--nav-height) + 64px);">
+    <h1 class="section-title">All Projects</h1>
+    <p class="section-subtitle">
+      Every application, experiment, and build I've developed so far.
+    </p>
+  </header>
+
+  <div class="projects-stack" style="padding-bottom: 80px;">
+    {% for p in projects %}
+      {# Define variables with safe defaults #}
+      {% set pid = (p.id | default('proj-' ~ loop.index)) %}
+      {% set title = p.title | default('Untitled project') %}
+      {% set desc = p.desc | default('Project description coming soon.') %}
+      {# UPDATE: New professional image name #}
+      {% set image = p.image or url_for('portfolio.static', filename='images/project-placeholder-card.png') %}
+      {% set live = p.live_url %}
+      {% set code = p.code_url %}
+      {% set tags = p.tags | default([]) %}
+      {% set highlights = p.highlights | default([]) %}
+      {% set tagline = p.tagline %}
+
+      <article class="showcase-item" id="project-{{ pid | replace(' ', '-') | lower }}">
+        <div class="showcase-media">
+          <a href="{{ live or code or url_for('portfolio.all_projects') }}"
+             target="{{ (live or code) and '_blank' or '_self' }}"
+             class="media-card-inner" rel="noopener">
+
+            {% if tagline %}
+            <div class="media-hook-wrapper">
+              <p class="media-hook">{{ tagline }}</p>
+              <i data-lucide="arrow-up-right" class="hook-arrow" aria-hidden="true"></i>
+            </div>
+            {% endif %}
+
+            <div class="media-img-wrapper">
+              <img src="{{ image }}"
+                   alt="{{ title }} Preview"
+                   loading="lazy" decoding="async">
+            </div>
+          </a>
+        </div>
+
+        <div class="showcase-content">
+          <h3 class="showcase-title">{{ title }}</h3>
+
+          <p class="showcase-desc">{{ desc }}</p>
+
+          {% if highlights %}
+          <ul class="showcase-highlights" aria-label="Highlights for {{ title }}">
+            {% for item in highlights %}
+            <li><span class="bullet-icon" aria-hidden="true">❖</span>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          <div class="showcase-tech" aria-hidden="false">
+            {% for t in tags %}
+            <span class="tech-badge">{{ t }}</span>
+            {% endfor %}
+          </div>
+
+          <div class="showcase-actions btn-stack" role="group" aria-label="Project actions for {{ title }}">
+            {% if live %}
+            <a href="{{ live }}" target="_blank" rel="noopener" class="btn-main btn--small" aria-label="Open live demo of {{ title }}">
+              <i data-lucide="external-link" aria-hidden="true"></i>
+              <span class="sr-only">Live Demo</span>
+            </a>
+            {% endif %}
+
+            {% if code %}
+            <a href="{{ code }}" target="_blank" rel="noopener noreferrer" class="btn-main btn--small" aria-label="View source for {{ title }}">
+              <i data-lucide="github" aria-hidden="true"></i>
+              <span class="sr-only">View Source</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    // Re-initialize icons for this specific page if needed
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+      lucide.createIcons();
+    }
+  </script>
+{% endblock %}
