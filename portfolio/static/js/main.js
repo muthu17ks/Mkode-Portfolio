@@ -198,7 +198,7 @@
     { sel: '.about__visual', cls: 'reveal-in', delay: 'delay-200' },
     { sel: '.tech-item', cls: 'reveal-in', stagger: 50 },
     { sel: '.award-card', cls: 'reveal-up', stagger: 100 },
-    { sel: '.contact__wrapper', cls: 'reveal-up' },
+    { sel: '.contact-layout', cls: 'reveal-up' },
   ];
 
   autoAnimConfig.forEach((config) => {
@@ -210,7 +210,8 @@
     });
   });
 
-  const projects = document.querySelectorAll('.showcase-item');
+  // Use class based staggered reveal for projects
+  const projects = document.querySelectorAll('.project-card');
   projects.forEach((el, index) => {
     el.classList.add(index % 2 === 0 ? 'reveal-from-left' : 'reveal-from-right');
   });
@@ -243,7 +244,6 @@
 
   let mouseX = -100, mouseY = -100;
   let ringX = -100, ringY = -100;
-  // Initialize size trackers for smooth morphing
   let ringW = 40, ringH = 40;
 
   let lockedItem = null;
@@ -251,7 +251,6 @@
   let isUnlocking = false;
   let isIdle = false;
 
-  // Physics Config
   const LERP_SPEED = 0.15;
 
   dot.style.opacity = '0';
@@ -268,25 +267,26 @@
 
     if (isIdle) {
       isIdle = false;
-      loop(); // Restart loop
+      loop();
     }
 
     dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
   });
 
+  // 1. UPDATED: Removed '.project-card' from this list
   const interactiveSelectors = [
     'a', 'button', '.btn-main', '.btn-hero-primary',
-    '.project-card', '.hero__avatar', '.tech-item', '[role="button"]'
+    '.hero__avatar', '.tech-item', '[role="button"]'
   ].join(',');
 
   function shouldIgnore(el) {
     if (!el) return true;
     if (el.hasAttribute('data-cursor-ignore')) return true;
-    if (el.closest('.media-img-wrapper, .showcase-media')) {
-      if (el.matches('button, a.btn-main, .btn-main, [role="button"]')) return false;
-      return true;
-    }
-    if (el.closest('.contact-v3__form') || el.closest('.contact__form')) {
+
+    // 2. UPDATED: Ignore cursor logic on project media/images
+    if (el.closest('.project-card__media')) return true;
+
+    if (el.closest('.contact-form-wrapper')) {
       if (el.matches('input, textarea, select, label')) return true;
     }
     return false;
@@ -302,7 +302,6 @@
       el.addEventListener('mouseleave', () => {
         if (lockedItem === el) {
           lockedItem = null; ring.classList.remove('is-locked'); isUnlocking = true;
-          // Note: transform reset happens here, size reset happens in loop via targetWidth/Height
           el.style.transform = ''; el.style.transition = 'transform 0.3s ease';
           setTimeout(() => { isUnlocking = false; }, 200);
         }
@@ -322,7 +321,6 @@
     const distMoved = Math.abs(mouseX - ringX) + Math.abs(mouseY - ringY);
     const sizeDiff = Math.abs(ringW - 40) + Math.abs(ringH - 40);
 
-    // Stop loop only if effectively stopped AND size is back to default
     if (distMoved < 0.1 && sizeDiff < 0.5 && !lockedItem && !isUnlocking) {
       isIdle = true;
       return;
@@ -356,20 +354,15 @@
         }
       }
     } else {
-      // Not locked: use mouse coords and default size
       targetX = mouseX;
       targetY = mouseY;
     }
 
-    // Apply LERP (Smoothing) to Position
     ringX += (targetX - ringX) * LERP_SPEED;
     ringY += (targetY - ringY) * LERP_SPEED;
-
-    // Apply LERP (Smoothing) to Size - This fixes the instant snap
     ringW += (targetWidth - ringW) * LERP_SPEED;
     ringH += (targetHeight - ringH) * LERP_SPEED;
 
-    // Movement squeeze effect (only when not locked)
     if (!lockedItem && !isUnlocking) {
       const deltaX = targetX - ringX, deltaY = targetY - ringY;
       const dist = Math.sqrt(deltaX ** 2 + deltaY ** 2);
@@ -378,7 +371,6 @@
       if (dist > 1) rotation = Math.atan2(deltaY, deltaX);
     }
 
-    // Apply styles directly
     ring.style.width = `${ringW}px`;
     ring.style.height = `${ringH}px`;
     ring.style.borderRadius = targetRadius;
@@ -393,7 +385,7 @@
  * Module: AJAX Contact Form & Toast Notifications
  */
 (function () {
-  const form = document.querySelector('.contact__form');
+  const form = document.querySelector('.contact-form'); // Updated selector
   if (!form) return;
   const submitBtn = form.querySelector('button[type="submit"]');
   const originalBtnContent = submitBtn.innerHTML;

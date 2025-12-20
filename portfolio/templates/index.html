@@ -15,7 +15,8 @@
 {% endblock %}
 
 {% block content %}
-{# ==============================
+
+  {# ==============================
      Section: Hero
   ============================== #}
   <section id="main" class="hero">
@@ -54,7 +55,7 @@
     </div>
   </section>
 
-{# ==============================
+  {# ==============================
      Section: About
   ============================== #}
   <section id="about" class="about-section">
@@ -103,4 +104,177 @@
 
     </div>
   </section>
+
+  {# ==============================
+     Section: Featured Projects
+  ============================== #}
+  <section id="projects" class="section-wrapper projects-section">
+    <div class="container">
+
+      <div class="section-header">
+        <h2 class="section-title">Featured Projects</h2>
+        <p class="section-subtitle">
+          High-impact applications built with modern web technologies.
+        </p>
+      </div>
+
+      <div class="projects-stack">
+        {% for p in featured_main %}
+        <article class="project-card" id="project-{{ p.id | replace(' ', '-') | lower }}">
+
+          <div class="project-card__media">
+            <a href="{{ p.live_url or p.code_url or url_for('portfolio.all_projects') }}" target="_blank" class="media-inner" rel="noopener">
+              {% if p.tagline %}
+              <div class="media-hook">
+                <span>{{ p.tagline }}</span>
+                <i data-lucide="arrow-up-right" class="hook-arrow" aria-hidden="true"></i>
+              </div>
+              {% endif %}
+
+              <div class="media-image-container">
+                <img src="{{ p.image or url_for('portfolio.static', filename='assets/images/project-placeholder-card.png') }}"
+                     alt="{{ p.title }} Preview" loading="lazy" decoding="async">
+              </div>
+            </a>
+          </div>
+
+          <div class="project-card__content">
+            <h3 class="project-title">{{ p.title }}</h3>
+            <p class="project-desc">{{ p.desc }}</p>
+
+            {% if p.highlights %}
+            <ul class="project-highlights" aria-label="Highlights for {{ p.title }}">
+              {% for item in p.highlights %}
+              <li><i data-lucide="check-circle-2" class="bullet-icon"></i> {{ item }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="project-tags">
+              {% for t in p.tags %}
+              <span class="tech-badge">{{ t }}</span>
+              {% endfor %}
+            </div>
+
+            <div class="project-actions">
+              {% if p.live_url %}
+              <a href="{{ p.live_url }}" target="_blank" rel="noopener" class="btn-main" aria-label="Live Demo">
+                <i data-lucide="external-link" aria-hidden="true"></i>
+                <span>Live Demo</span>
+              </a>
+              {% endif %}
+
+              {% if p.code_url %}
+              <a href="{{ p.code_url }}" target="_blank" rel="noopener noreferrer" class="btn-main" aria-label="Source Code">
+                <i data-lucide="github" aria-hidden="true"></i>
+                <span>Code</span>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+
+        </article>
+        {% endfor %}
+      </div>
+
+      <div class="section-footer">
+        <a href="{{ url_for('portfolio.all_projects') }}" class="link-archive">
+          View Full Project Archive
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  {# ==============================
+     Section: Awards & Honours
+  ============================== #}
+  <section id="awards" class="section-wrapper awards-section">
+    <div class="container">
+
+      <div class="section-header">
+        <h2 class="section-title">Honours & Awards</h2>
+        <p class="section-subtitle">Academic milestones and competitive programming highlights.</p>
+      </div>
+
+      <div class="awards-grid">
+        {% for ach in data.achievements %}
+        <article class="award-card">
+          <div class="award-card__icon">
+            <i data-lucide="{{ ach.icon }}" aria-hidden="true"></i>
+          </div>
+          <h3 class="award-card__title">{{ ach.title }}</h3>
+          <p class="award-card__desc">
+            {{ ach.description }}
+          </p>
+          <div class="award-card__meta">
+            {% for meta in ach.meta %}
+            <span class="meta-pill">{{ meta }}</span>
+            {% endfor %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+
+    </div>
+  </section>
+
+  {# ==============================
+     Section: Contact
+  ============================== #}
+  <section id="contact" class="section-wrapper contact-section">
+    <div class="container">
+
+      <div class="contact-layout">
+        <aside class="contact-info">
+          <h2 class="section-title">Let’s Build Something Great</h2>
+          <p class="contact-subtitle">
+            Open to full-time roles and internships in full-stack development.
+            Reach out via email or social media.
+          </p>
+
+          <nav class="contact-links">
+            <a class="contact-chip" href="mailto:muthu17@gmail.com">
+              <i data-lucide="mail"></i> <span>muthu17@gmail.com</span>
+            </a>
+            <a class="contact-chip" href="https://github.com/" target="_blank">
+              <i data-lucide="github"></i> <span>GitHub</span>
+            </a>
+            <a class="contact-chip" href="https://linkedin.com/" target="_blank">
+              <i data-lucide="linkedin"></i> <span>LinkedIn</span>
+            </a>
+          </nav>
+        </aside>
+
+        <div class="contact-form-wrapper">
+          <form class="contact-form" method="POST" action="{{ url_for('portfolio.contact') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-row">
+              <div class="form-field">
+                <input id="name" name="name" type="text" placeholder=" " required>
+                <label for="name">Your Name</label>
+              </div>
+              <div class="form-field">
+                <input id="email" name="email" type="email" placeholder=" " required>
+                <label for="email">Email</label>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <textarea id="message" name="message" placeholder=" " required></textarea>
+              <label for="message">Message</label>
+            </div>
+
+            <button type="submit" class="btn-main">
+              <i data-lucide="send"></i>
+              <span>Send Message</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
 {% endblock %}
