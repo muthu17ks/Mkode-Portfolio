@@ -479,3 +479,75 @@
   window.addEventListener('load', () => { setTimeout(dismissPreloader, 400); });
   setTimeout(dismissPreloader, 8000);
 })();
+
+/**
+ * Module: Dynamic Color Palette Engine (Color Hunt Style)
+ * Changes the entire site theme based on 4 input colors.
+ */
+window.setThemePalette = function(color1, color2, color3, color4) {
+  // Helper: Convert HEX to HSL
+  function hexToHSL(H) {
+    let r = 0, g = 0, b = 0;
+    if (H.length == 4) {
+      r = "0x" + H[1] + H[1]; g = "0x" + H[2] + H[2]; b = "0x" + H[3] + H[3];
+    } else if (H.length == 7) {
+      r = "0x" + H[1] + H[2]; g = "0x" + H[3] + H[4]; b = "0x" + H[5] + H[6];
+    }
+    r /= 255; g /= 255; b /= 255;
+    let cmin = Math.min(r,g,b), cmax = Math.max(r,g,b), delta = cmax - cmin;
+    let h = 0, s = 0, l = 0;
+
+    if (delta == 0) h = 0;
+    else if (cmax == r) h = ((g - b) / delta) % 6;
+    else if (cmax == g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+    l = (cmax + cmin) / 2;
+    s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+    s = +(s * 100).toFixed(1);
+    l = +(l * 100).toFixed(1);
+    return { h, s, l };
+  }
+
+  const root = document.documentElement;
+
+  // Mapping Strategy (Material 3 Expressive):
+  // Color 1 (Primary): Main Brand, Buttons, Links
+  // Color 2 (Secondary): Accents, Gradients
+  // Color 3 (Tertiary): Status indicators, Highlights
+  // Color 4 (Neutral): Backgrounds, Text Base
+
+  const p = hexToHSL(color1); // Primary
+  const s = hexToHSL(color2); // Secondary
+  const t = hexToHSL(color3); // Tertiary
+  const n = hexToHSL(color4); // Neutral
+
+  // Set Primary
+  root.style.setProperty('--p-h', p.h);
+  root.style.setProperty('--p-s', p.s + '%');
+  root.style.setProperty('--p-l', p.l + '%');
+
+  // Set Secondary
+  root.style.setProperty('--s-h', s.h);
+  root.style.setProperty('--s-s', s.s + '%');
+  root.style.setProperty('--s-l', s.l + '%');
+
+  // Set Tertiary
+  root.style.setProperty('--t-h', t.h);
+  root.style.setProperty('--t-s', t.s + '%');
+  root.style.setProperty('--t-l', t.l + '%');
+
+  // Set Neutral (Force high lightness for light mode base)
+  root.style.setProperty('--n-h', n.h);
+  root.style.setProperty('--n-s', Math.min(n.s, 20) + '%'); // Dampen saturation for neutrals
+  root.style.setProperty('--n-l', '95%'); // Reset lightness for standard light mode base
+
+  console.log('Theme Updated:', {p, s, t, n});
+};
+
+// Example Usage (You can run this in browser console to test):
+ setThemePalette('#FF5733', '#C70039', '#900C3F', '#F5F5F5');
+// setThemePalette('#1B3C53', '#1B3C53', '#1B3C53', '#1B3C53');
+// setThemePalette('#360185', '#8F0177', '#DE1A58', '#F4B342');
