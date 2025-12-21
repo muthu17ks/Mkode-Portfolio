@@ -486,7 +486,6 @@ body {
   box-shadow: var(--about-shadow-card); overflow: hidden;
   transition: transform var(--duration-slow) var(--ease-default);
 }
-.tech-glass-panel:hover { transform: translateY(-5px); border-color: var(--color-glow); }
 .tech-header {
   display: flex; align-items: center; padding: var(--space-16);
   border-bottom: 1px solid var(--color-border); background: rgba(255, 255, 255, 0.02);
@@ -548,11 +547,22 @@ body {
 .hook-arrow { width: 16px; height: 16px; transition: transform var(--duration-fast); }
 .media-inner:hover .hook-arrow { transform: translate(2px, -2px); }
 .media-image-container {
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0; overflow: hidden;
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1); transform: translateY(4px); transition: transform var(--duration-slow);
+  aspect-ratio: 16 / 9;
+  background-color: var(--color-border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  overflow: hidden;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
+  transform: translateY(4px);
+  transition: transform var(--duration-slow);
+}
+
+.media-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .media-inner:hover .media-image-container { transform: translateY(0); }
-.media-image-container img { width: 100%; height: auto; display: block; }
 .project-title { font-size: clamp(24px, 3vw, 32px); font-weight: var(--font-weight-heavy); margin: 0 0 var(--space-16) 0; color: var(--color-text); }
 .project-desc { font-size: var(--font-size-sm); line-height: 1.7; color: var(--color-text); opacity: 0.85; margin-bottom: var(--space-24); }
 .project-highlights { list-style: none; padding: 0; margin: 0 0 var(--space-24) 0; display: flex; flex-direction: column; gap: var(--space-8); }

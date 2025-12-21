@@ -1,15 +1,9 @@
 /**
- * ==========================================================================
  * Main Application Script
- * Handles global UI interactions, animations, theme management, and forms.
- * ==========================================================================
  */
-
 'use strict';
 
-/**
- * Module: Theme Management System
- */
+/* Theme Management */
 (function () {
   const root = document.documentElement;
   const savedTheme = localStorage.getItem('theme') || 'light';
@@ -41,129 +35,109 @@
   });
 })();
 
-/**
- * Module: Navigation Router & Mobile Text Updater
- */
+/* Navigation Router */
 (function () {
-  const nav = document.querySelector('.navbar__menu');
+  const navMenu = document.querySelector('.navbar__menu');
   const mobileBtn = document.getElementById('mobile-menu-btn');
   const mobileBtnText = mobileBtn ? mobileBtn.querySelector('.btn-text') : null;
 
-  if (!nav) return;
-
-  const homeUrl = nav.dataset.homeUrl || '/';
-  const homePath = new URL(homeUrl, location.origin).pathname;
-  const links = Array.from(nav.querySelectorAll('a[href^="#"]'));
-  const linkMap = new Map(links.map((a) => [a.getAttribute('href'), a]));
+  const allNavLinks = document.querySelectorAll('a[href^="#"]');
   const sections = Array.from(document.querySelectorAll('section[id]'));
 
-  if (mobileBtn) {
+  if (mobileBtn && navMenu) {
     mobileBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const isOpen = nav.classList.toggle('is-open');
+      const isOpen = navMenu.classList.toggle('is-open');
       mobileBtn.setAttribute('aria-expanded', isOpen);
-      if (!isOpen) updateActiveState();
     });
 
     document.addEventListener('click', (e) => {
-      if (nav.classList.contains('is-open') && !nav.contains(e.target) && e.target !== mobileBtn) {
-        nav.classList.remove('is-open');
+      if (navMenu.classList.contains('is-open') && !navMenu.contains(e.target) && e.target !== mobileBtn) {
+        navMenu.classList.remove('is-open');
         mobileBtn.setAttribute('aria-expanded', 'false');
       }
     });
   }
 
-  function updateMobileText(text) {
-    if (mobileBtnText) mobileBtnText.textContent = text || 'Menu';
-  }
-
-  function clearActive() {
-    links.forEach((a) => {
-      a.classList.remove('is-active');
-      a.removeAttribute('aria-current');
-    });
-  }
-
-  function setActiveHash(hash) {
-    if (!hash) return;
-    const link = linkMap.get(hash);
-    clearActive();
-    if (link) {
-      link.classList.add('is-active');
-      link.setAttribute('aria-current', 'page');
-      updateMobileText(link.textContent);
-    } else {
-      updateMobileText('Menu');
-    }
-  }
-
-  nav.addEventListener('click', (ev) => {
+  document.addEventListener('click', (ev) => {
     const el = ev.target.closest('a[href^="#"]');
     if (!el) return;
-    nav.classList.remove('is-open');
-    if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'false');
+
     ev.preventDefault();
     const href = el.getAttribute('href');
 
-    if (location.pathname !== homePath) {
-      location.href = homeUrl + href;
-      return;
+    if (navMenu && navMenu.classList.contains('is-open')) {
+      navMenu.classList.remove('is-open');
+      if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'false');
     }
+
     const target = document.querySelector(href);
     if (target) {
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      // On mobile, force 'auto' scrolling to avoid weird smooth scroll fights with OS
-      const behavior = (reduceMotion || window.innerWidth < 1024) ? 'auto' : 'smooth';
-      target.scrollIntoView({ behavior: behavior });
+      target.scrollIntoView({ behavior: 'smooth' });
       history.pushState(null, '', href);
-      setActiveHash(href);
     }
   });
 
   function updateActiveState() {
-    if (window.scrollY < 50) {
-      const homeLink = linkMap.get('#main');
-      if (homeLink) setActiveHash('#main');
-      else {
-        clearActive();
-        updateMobileText('Menu');
-      }
-      return;
-    }
     let current = null;
-    const scrollPos = window.scrollY + window.innerHeight * 0.35;
-    for (const sec of sections) {
-      const top = sec.offsetTop;
-      const bottom = top + sec.offsetHeight;
-      if (scrollPos >= top && scrollPos < bottom) {
-        current = '#' + sec.id;
-        break;
-      }
+
+    // FIX: Explicitly set current to #main (Home) if at the top
+    if (window.scrollY < 100) {
+       current = '#main';
+    } else {
+       const scrollPos = window.scrollY + window.innerHeight * 0.4;
+       for (const sec of sections) {
+         const top = sec.offsetTop;
+         const bottom = top + sec.offsetHeight;
+         if (scrollPos >= top && scrollPos < bottom) {
+           current = '#' + sec.id;
+           break;
+         }
+       }
     }
-    if (current) setActiveHash(current);
+
+    // Reset all
+    allNavLinks.forEach(a => {
+        a.classList.remove('is-active');
+        a.removeAttribute('aria-current');
+    });
+
+    if (current) {
+        const activeLinks = document.querySelectorAll(`a[href="${current}"]`);
+        activeLinks.forEach(link => {
+            link.classList.add('is-active');
+            link.setAttribute('aria-current', 'page');
+
+            // Update Mobile Text to "Home", "About", etc.
+            if (mobileBtnText && link.closest('.navbar__menu')) {
+                mobileBtnText.textContent = link.textContent;
+            }
+        });
+    } else {
+        // Only default to "Menu" if we are completely lost
+        if (mobileBtnText) mobileBtnText.textContent = 'Menu';
+    }
   }
 
-  if ('IntersectionObserver' in window && sections.length) {
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries
-        .filter(e => e.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible) setActiveHash('#' + visible.target.id);
-    }, { rootMargin: '-40% 0px -50% 0px', threshold: [0, 0.25, 0.5] });
-    sections.forEach(s => observer.observe(s));
-  } else {
-    window.addEventListener('scroll', updateActiveState, { passive: true });
-  }
+  window.addEventListener('scroll', updateActiveState, { passive: true });
 
   window.addEventListener('load', () => {
-    if (location.hash) setActiveHash(location.hash);
-    else updateActiveState();
+    if (location.hash) {
+      const target = document.querySelector(location.hash);
+      if (target) {
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: 'auto' });
+          updateActiveState();
+        }, 100);
+      }
+    } else {
+        // Trigger once on load to ensure "Home" is selected
+        updateActiveState();
+    }
   });
 })();
 
-/**
- * Module: Back-To-Top Utility
- */
+/* Back-To-Top Utility */
 (function () {
   const btn = document.getElementById('to-top');
   if (!btn) return;
@@ -182,12 +156,8 @@
   });
 })();
 
-/**
- * Module: Scroll Reveal Animations
- * STRICTLY DISABLED ON MOBILE
- */
+/* Scroll Reveal Animations */
 (function () {
-  // STRICT CHECK: If mobile/tablet, do NOT run animations.
   if (window.innerWidth < 1024) return;
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -217,7 +187,6 @@
     });
   });
 
-  // Use class based staggered reveal for projects
   const projects = document.querySelectorAll('.project-card');
   projects.forEach((el, index) => {
     el.classList.add(index % 2 === 0 ? 'reveal-from-left' : 'reveal-from-right');
@@ -236,12 +205,8 @@
   animatedElements.forEach((el) => observer.observe(el));
 })();
 
-/**
- * Module: Custom Cursor (Optimized)
- * STRICTLY DISABLED ON MOBILE
- */
+/* Custom Cursor */
 (function () {
-  // STRICT CHECK: If it's a touch device OR width < 1024, DO NOT RUN.
   if (window.innerWidth < 1024 || window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
 
   const dot = document.querySelector('.cursor__dot');
@@ -281,7 +246,6 @@
     dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
   });
 
-  // 1. UPDATED: Removed '.project-card' from this list
   const interactiveSelectors = [
     'a', 'button', '.btn-main', '.btn-hero-primary',
     '.hero__avatar', '.tech-item', '[role="button"]'
@@ -291,7 +255,6 @@
     if (!el) return true;
     if (el.hasAttribute('data-cursor-ignore')) return true;
 
-    // 2. UPDATED: Ignore cursor logic on project media/images
     if (el.closest('.project-card__media')) return true;
 
     if (el.closest('.contact-form-wrapper')) {
@@ -389,11 +352,9 @@
   loop();
 })();
 
-/**
- * Module: AJAX Contact Form & Toast Notifications
- */
+/* Contact Form & Toasts */
 (function () {
-  const form = document.querySelector('.contact-form'); // Updated selector
+  const form = document.querySelector('.contact-form');
   if (!form) return;
   const submitBtn = form.querySelector('button[type="submit"]');
   const originalBtnContent = submitBtn.innerHTML;
@@ -466,26 +427,37 @@
   });
 })();
 
-/**
- * Module: Page Preloader
- */
+/* Page Preloader & Smart Scroll */
 (function () {
   const preloader = document.getElementById('preloader');
   if (!preloader) return;
+
+  const handleInitialScroll = () => {
+    if (window.location.hash) {
+      const target = document.querySelector(window.location.hash);
+      if (target) {
+        target.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
+    }
+  };
+
   const dismissPreloader = () => {
     preloader.classList.add('is-loaded');
-    setTimeout(() => { preloader.style.display = 'none'; }, 650);
+    handleInitialScroll();
+    setTimeout(() => {
+      preloader.style.display = 'none';
+    }, 650);
   };
-  window.addEventListener('load', () => { setTimeout(dismissPreloader, 400); });
-  setTimeout(dismissPreloader, 8000);
+
+  window.addEventListener('load', () => {
+    setTimeout(dismissPreloader, 100);
+  });
+
+  setTimeout(dismissPreloader, 5000);
 })();
 
-/**
- * Module: Dynamic Color Palette Engine (Color Hunt Style)
- * Changes the entire site theme based on 4 input colors.
- */
+/* Dynamic Color Palette */
 window.setThemePalette = function(color1, color2, color3, color4) {
-  // Helper: Convert HEX to HSL
   function hexToHSL(H) {
     let r = 0, g = 0, b = 0;
     if (H.length == 4) {
@@ -513,41 +485,31 @@ window.setThemePalette = function(color1, color2, color3, color4) {
 
   const root = document.documentElement;
 
-  // Mapping Strategy (Material 3 Expressive):
-  // Color 1 (Primary): Main Brand, Buttons, Links
-  // Color 2 (Secondary): Accents, Gradients
-  // Color 3 (Tertiary): Status indicators, Highlights
-  // Color 4 (Neutral): Backgrounds, Text Base
+  const p = hexToHSL(color1);
+  const s = hexToHSL(color2);
+  const t = hexToHSL(color3);
+  const n = hexToHSL(color4);
 
-  const p = hexToHSL(color1); // Primary
-  const s = hexToHSL(color2); // Secondary
-  const t = hexToHSL(color3); // Tertiary
-  const n = hexToHSL(color4); // Neutral
-
-  // Set Primary
   root.style.setProperty('--p-h', p.h);
   root.style.setProperty('--p-s', p.s + '%');
   root.style.setProperty('--p-l', p.l + '%');
 
-  // Set Secondary
   root.style.setProperty('--s-h', s.h);
   root.style.setProperty('--s-s', s.s + '%');
   root.style.setProperty('--s-l', s.l + '%');
 
-  // Set Tertiary
   root.style.setProperty('--t-h', t.h);
   root.style.setProperty('--t-s', t.s + '%');
   root.style.setProperty('--t-l', t.l + '%');
 
-  // Set Neutral (Force high lightness for light mode base)
   root.style.setProperty('--n-h', n.h);
-  root.style.setProperty('--n-s', Math.min(n.s, 20) + '%'); // Dampen saturation for neutrals
-  root.style.setProperty('--n-l', '95%'); // Reset lightness for standard light mode base
+  root.style.setProperty('--n-s', Math.min(n.s, 20) + '%');
+  root.style.setProperty('--n-l', '95%');
 
   console.log('Theme Updated:', {p, s, t, n});
 };
 
-// Example Usage (You can run this in browser console to test):
- setThemePalette('#FF5733', '#C70039', '#900C3F', '#F5F5F5');
+//setThemePalette('#FF5733', '#C70039', '#900C3F', '#F5F5F5');
 // setThemePalette('#1B3C53', '#1B3C53', '#1B3C53', '#1B3C53');
 // setThemePalette('#360185', '#8F0177', '#DE1A58', '#F4B342');
+
