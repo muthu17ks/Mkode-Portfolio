@@ -112,7 +112,9 @@
     const target = document.querySelector(href);
     if (target) {
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+      // On mobile, force 'auto' scrolling to avoid weird smooth scroll fights with OS
+      const behavior = (reduceMotion || window.innerWidth < 1024) ? 'auto' : 'smooth';
+      target.scrollIntoView({ behavior: behavior });
       history.pushState(null, '', href);
       setActiveHash(href);
     }
@@ -175,14 +177,19 @@
   onScroll();
   btn.addEventListener('click', (e) => {
     e.preventDefault();
-    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    const behavior = (reduceMotion || window.innerWidth < 1024) ? 'auto' : 'smooth';
+    window.scrollTo({ top: 0, behavior: behavior });
   });
 })();
 
 /**
  * Module: Scroll Reveal Animations
+ * STRICTLY DISABLED ON MOBILE
  */
 (function () {
+  // STRICT CHECK: If mobile/tablet, do NOT run animations.
+  if (window.innerWidth < 1024) return;
+
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduceMotion) return;
 
@@ -231,10 +238,11 @@
 
 /**
  * Module: Custom Cursor (Optimized)
+ * STRICTLY DISABLED ON MOBILE
  */
 (function () {
-  // STRICT CHECK: If it's a touch device, DO NOT RUN.
-  if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
+  // STRICT CHECK: If it's a touch device OR width < 1024, DO NOT RUN.
+  if (window.innerWidth < 1024 || window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
 
   const dot = document.querySelector('.cursor__dot');
   const ring = document.querySelector('.cursor__ring');
