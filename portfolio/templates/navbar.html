@@ -1,6 +1,10 @@
 <header class="navbar" role="banner">
 
-  <a href="{{ url_for('portfolio.home') }}" class="navbar__logo" aria-label="Return to Home">
+  {# 1. Define variables to check current page #}
+  {% set is_home = request.endpoint == 'portfolio.home' %}
+  {% set home_url = url_for('portfolio.home') %}
+
+  <a href="{{ home_url }}" class="navbar__logo" aria-label="Return to Home">
     <img
       src="{{ url_for('portfolio.static', filename='images/logo-Mkode-icon.png') }}"
       alt="Mkode Logo"
@@ -16,12 +20,24 @@
       <span class="btn-text">Menu</span>
     </button>
 
-    <nav id="navbar-menu" class="navbar__menu" aria-label="Main Navigation" data-home-url="{{ url_for('portfolio.home') }}">
-      <a href="#main" class="nav-link">Home</a>
-      <a href="#about" class="nav-link">About</a>
-      <a href="#projects" class="nav-link">Projects</a>
-      <a href="#awards" class="nav-link">Awards</a>
-      <a href="#contact" class="nav-link">Contact</a>
+    <nav id="navbar-menu" class="navbar__menu" aria-label="Main Navigation">
+      {#
+         LOGIC:
+         If is_home is true -> use '#section' (Smooth Scroll)
+         Else -> use 'home_url/#section' (Redirect back to home section)
+      #}
+
+      <a href="{{ '#main' if is_home else home_url ~ '#main' }}" class="nav-link">Home</a>
+
+      <a href="{{ '#about' if is_home else home_url ~ '#about' }}" class="nav-link">About</a>
+
+      {# Note: On the projects page, you might want this to stay on the projects page,
+         OR go back to the featured projects section. I've set it to go back to home section. #}
+      <a href="{{ '#projects' if is_home else home_url ~ '#projects' }}" class="nav-link">Projects</a>
+
+      <a href="{{ '#awards' if is_home else home_url ~ '#awards' }}" class="nav-link">Awards</a>
+
+      <a href="{{ '#contact' if is_home else home_url ~ '#contact' }}" class="nav-link">Contact</a>
     </nav>
 
     <button id="theme-toggle" class="navbar__theme-toggle" aria-label="Switch Color Theme">
@@ -29,6 +45,7 @@
     </button>
   </div>
 
-  <a href="#contact" class="navbar__cta">Hire Me</a>
+  {# Fix the 'Hire Me' button too #}
+  <a href="{{ '#contact' if is_home else home_url ~ '#contact' }}" class="navbar__cta">Hire Me</a>
 
 </header>

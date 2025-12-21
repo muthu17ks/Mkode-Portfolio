@@ -1,9 +1,10 @@
 /**
  * Main Application Script
+ * Fixed: Removed delayed scroll jumping behavior in Preloader
  */
 'use strict';
 
-/* Theme Management */
+/* Theme Management (Conditional Animation) */
 (function () {
   const root = document.documentElement;
   const savedTheme = localStorage.getItem('theme') || 'light';
@@ -25,13 +26,77 @@
 
   if (!toggleBtn) return;
 
-  toggleBtn.addEventListener('click', () => {
+  toggleBtn.addEventListener('click', async (event) => {
     const isDark = root.classList.contains('dark-theme');
     const nextTheme = isDark ? 'light' : 'dark';
-    root.classList.toggle('dark-theme', !isDark);
-    root.classList.toggle('light-theme', isDark);
-    localStorage.setItem('theme', nextTheme);
-    updateIcon(nextTheme);
+
+    // CHECK: Is screen small (mobile) OR is the Transition API missing?
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const supportsTransition = document.startViewTransition;
+
+    // IF mobile or no support -> Simple Toggle (No Animation)
+    if (isMobile || !supportsTransition) {
+      root.classList.toggle('dark-theme', !isDark);
+      root.classList.toggle('light-theme', isDark);
+      localStorage.setItem('theme', nextTheme);
+      updateIcon(nextTheme);
+      return;
+    }
+
+    // ELSE -> Run Desktop Ripple Animation
+    const x = event.clientX;
+    const y = event.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, innerWidth - x),
+      Math.max(y, innerHeight - y)
+    );
+
+    const ripple = document.createElement('div');
+    ripple.classList.add('theme-transition-ripple');
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+    document.body.appendChild(ripple);
+
+    const transition = document.startViewTransition(() => {
+      root.classList.toggle('dark-theme', !isDark);
+      root.classList.toggle('light-theme', isDark);
+      localStorage.setItem('theme', nextTheme);
+      updateIcon(nextTheme);
+    });
+
+    await transition.ready;
+
+    document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${endRadius}px at ${x}px ${y}px)`,
+        ],
+      },
+      {
+        duration: 400,
+        easing: 'ease-in',
+        pseudoElement: '::view-transition-new(root)',
+      }
+    );
+
+    const rippleAnimation = ripple.animate(
+      {
+        width: ['0px', `${endRadius * 2}px`],
+        height: ['0px', `${endRadius * 2}px`],
+        opacity: [1, 0],
+        borderWidth: ['50px', '20px']
+      },
+      {
+        duration: 400,
+        easing: 'ease-in',
+        fill: 'forwards'
+      }
+    );
+
+    rippleAnimation.onfinish = () => {
+      ripple.remove();
+    };
   });
 })();
 
@@ -59,11 +124,16 @@
     });
   }
 
-  document.addEventListener('click', (ev) => {
+document.addEventListener('click', (ev) => {
     const el = ev.target.closest('a[href^="#"]');
     if (!el) return;
 
     ev.preventDefault();
+
+    // --- ADD THIS LINE ---
+    el.blur(); // Removes focus immediately to prevent sticky styles on tablets
+    // ---------------------
+
     const href = el.getAttribute('href');
 
     if (navMenu && navMenu.classList.contains('is-open')) {
@@ -77,11 +147,9 @@
       history.pushState(null, '', href);
     }
   });
-
   function updateActiveState() {
     let current = null;
 
-    // FIX: Explicitly set current to #main (Home) if at the top
     if (window.scrollY < 100) {
        current = '#main';
     } else {
@@ -96,7 +164,6 @@
        }
     }
 
-    // Reset all
     allNavLinks.forEach(a => {
         a.classList.remove('is-active');
         a.removeAttribute('aria-current');
@@ -107,14 +174,11 @@
         activeLinks.forEach(link => {
             link.classList.add('is-active');
             link.setAttribute('aria-current', 'page');
-
-            // Update Mobile Text to "Home", "About", etc.
             if (mobileBtnText && link.closest('.navbar__menu')) {
                 mobileBtnText.textContent = link.textContent;
             }
         });
     } else {
-        // Only default to "Menu" if we are completely lost
         if (mobileBtnText) mobileBtnText.textContent = 'Menu';
     }
   }
@@ -122,6 +186,9 @@
   window.addEventListener('scroll', updateActiveState, { passive: true });
 
   window.addEventListener('load', () => {
+    // If you want to rely purely on browser native scroll restoration,
+    // you can comment out this block too.
+    // For now, I'm leaving it as it runs immediately on load, unlike the preloader one.
     if (location.hash) {
       const target = document.querySelector(location.hash);
       if (target) {
@@ -131,7 +198,6 @@
         }, 100);
       }
     } else {
-        // Trigger once on load to ensure "Home" is selected
         updateActiveState();
     }
   });
@@ -188,8 +254,8 @@
   });
 
   const projects = document.querySelectorAll('.project-card');
-  projects.forEach((el, index) => {
-    el.classList.add(index % 2 === 0 ? 'reveal-from-left' : 'reveal-from-right');
+  projects.forEach((el) => {
+    el.classList.add('reveal-up');
   });
 
   const observer = new IntersectionObserver((entries) => {
@@ -248,7 +314,7 @@
 
   const interactiveSelectors = [
     'a', 'button', '.btn-main', '.btn-hero-primary',
-    '.hero__avatar', '.tech-item', '[role="button"]'
+    '.hero__avatar', '.tech-item', '[role="button"]', '.tech-badge'
   ].join(',');
 
   function shouldIgnore(el) {
@@ -432,6 +498,9 @@
   const preloader = document.getElementById('preloader');
   if (!preloader) return;
 
+  // FIX: This delayed function was causing the jump after scroll.
+  // It has been commented out to fix the bug.
+  /*
   const handleInitialScroll = () => {
     if (window.location.hash) {
       const target = document.querySelector(window.location.hash);
@@ -440,10 +509,11 @@
       }
     }
   };
+  */
 
   const dismissPreloader = () => {
     preloader.classList.add('is-loaded');
-    handleInitialScroll();
+    // handleInitialScroll(); // Removed
     setTimeout(() => {
       preloader.style.display = 'none';
     }, 650);
@@ -509,7 +579,6 @@ window.setThemePalette = function(color1, color2, color3, color4) {
   console.log('Theme Updated:', {p, s, t, n});
 };
 
-setThemePalette('#FF5733', '#C70039', '#900C3F', '#F5F5F5');
+//setThemePalette('#FF5733', '#C70039', '#900C3F', '#F5F5F5');
 // setThemePalette('#1B3C53', '#1B3C53', '#1B3C53', '#1B3C53');
 // setThemePalette('#360185', '#8F0177', '#DE1A58', '#F4B342');
-

@@ -68,11 +68,24 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="footer">
-    <p class="footer__copy">
-      © 2025 Muthukumaran — Turning passion for code into real-world solutions.
-    </p>
-  </footer>
+<footer class="footer">
+  <div class="container footer__layout">
+
+    <div class="footer__left">
+      <p class="footer__copy">
+        &copy; 2025 <span class="opacity-50">All rights reserved.</span>
+      </p>
+    </div>
+
+    <div class="footer__right">
+      <div class="tech-pill">
+        <span>Designed & Built by</span>
+        <i data-lucide="code-2"></i> <span>Muthukumaran</span>
+      </div>
+    </div>
+
+  </div>
+</footer>
 
   <button id="to-top" class="to-top" aria-label="Back to top" title="Back to top">
     <i data-lucide="arrow-up" aria-hidden="true"></i>
