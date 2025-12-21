@@ -509,7 +509,7 @@ window.setThemePalette = function(color1, color2, color3, color4) {
   console.log('Theme Updated:', {p, s, t, n});
 };
 
-//setThemePalette('#FF5733', '#C70039', '#900C3F', '#F5F5F5');
+setThemePalette('#FF5733', '#C70039', '#900C3F', '#F5F5F5');
 // setThemePalette('#1B3C53', '#1B3C53', '#1B3C53', '#1B3C53');
 // setThemePalette('#360185', '#8F0177', '#DE1A58', '#F4B342');
 
