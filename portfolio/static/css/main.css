@@ -7,6 +7,14 @@
   --t-h: 160; --t-s: 84%; --t-l: 39%;
   --n-h: 215; --n-s: 20%; --n-l: 95%;
 
+  /* --- BUTTON INTERACTION TOKENS --- */
+  --btn-hover-scale: 1.08;
+  --btn-active-scale: 0.96;
+  --btn-hover-bg: hsl(var(--p-h), var(--p-s), calc(var(--p-l) + 6%));
+  --btn-active-bg: hsl(var(--p-h), var(--p-s), calc(var(--p-l) - 8%));
+  --btn-hover-shadow: 0 10px 28px hsla(var(--p-h), var(--p-s), 50%, 0.35);
+  --btn-active-shadow: inset 0 3px 8px hsla(var(--p-h), var(--p-s), 30%, 0.45);
+
   --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: monospace;
 
@@ -132,7 +140,11 @@
 /* ==========================================================
    2. Base Setup & Reset
    ========================================================== */
-*, *::before, *::after { box-sizing: border-box; }
+*, *::before, *::after {
+  box-sizing: border-box;
+  /* FIX: Removes the blue highlight square on mobile tap */
+  -webkit-tap-highlight-color: transparent;
+}
 
 html {
   scroll-behavior: smooth;
@@ -207,16 +219,12 @@ body {
   transition: all var(--duration-fast) var(--ease-default); z-index: 1;
 }
 
-/* NEW CODE: Separates Active and Hover states */
-
-/* 1. Active State (Always applies when JS adds the class) */
+/* Navbar: Active & Hover States */
 .navbar__menu a.is-active {
   background-color: hsla(var(--p-h), var(--p-s), 50%, 0.12);
   color: var(--color-btn-bg);
   font-weight: var(--font-weight-bold);
 }
-
-/* 2. Hover State (Only applies on devices with a mouse) */
 @media (hover: hover) {
   .navbar__menu a:hover {
     background-color: hsla(var(--p-h), var(--p-s), 50%, 0.12);
@@ -238,6 +246,7 @@ body {
 }
 .navbar__theme-toggle i { width: 20px; height: 20px; }
 
+/* --- UPDATED NAVBAR CTA (HIRE ME BUTTON) - MATCHES MAIN BTN --- */
 .navbar__cta {
   display: inline-flex; align-items: center; justify-content: center;
   padding: var(--space-8) var(--space-24);
@@ -246,12 +255,30 @@ body {
   border-radius: var(--radius-pill); text-decoration: none;
   pointer-events: auto; position: relative; overflow: hidden;
   transition: all var(--duration-fast) var(--ease-default);
-  background: var(--color-btn-bg); color: var(--color-btn-text);
+  background: var(--color-btn-bg);
+  color: var(--color-btn-text);
   border: 1px solid var(--color-btn-bg);
 }
-.navbar__cta:hover {
-  background: transparent; color: var(--color-text); border-color: var(--color-text); transform: scale(1.05);
+
+/* HOVER - Only on devices with mouse */
+@media (hover: hover) {
+  .navbar__cta:hover {
+    background: var(--btn-hover-bg);
+    transform: scale(var(--btn-hover-scale));
+    box-shadow: var(--btn-hover-shadow);
+    color: var(--color-btn-text);
+    border-color: transparent;
+  }
 }
+
+/* ACTIVE - Works on Touch & Click */
+.navbar__cta:active {
+  background: var(--btn-active-bg);
+  transform: scale(var(--btn-active-scale));
+  box-shadow: var(--btn-active-shadow);
+  border-color: transparent;
+}
+
 .navbar__mobile-toggle { display: none; }
 
 /* ==========================================================
@@ -276,7 +303,6 @@ body {
   gap: var(--space-16);
 }
 
-/* Left Side: Copyright */
 .footer__copy {
   margin: 0;
   font-size: var(--font-size-sm);
@@ -287,43 +313,34 @@ body {
 
 .opacity-50 { opacity: 0.5; }
 
-/* Right Side: Professional Badge */
 .tech-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px; /* Slightly wider gap for readability */
+  gap: 8px;
   padding: 6px 14px;
   border-radius: var(--radius-pill);
-
-  /* Neutral / Professional Background */
   background: hsla(var(--p-h), var(--p-s), 50%, 0.05);
   border: 1px solid hsla(var(--p-h), var(--p-s), 50%, 0.15);
-
   font-size: 11px;
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--color-text);
   transition: all 0.3s ease;
-  cursor: default; /* It's a label, not a button */
+  cursor: default;
 }
-
-/* Hover Effect: Subtle Tech Glow */
 .tech-pill:hover {
   background: hsla(var(--p-h), var(--p-s), 50%, 0.08);
   border-color: hsla(var(--p-h), var(--p-s), 50%, 0.3);
   box-shadow: 0 2px 8px hsla(var(--p-h), var(--p-s), 50%, 0.08);
   transform: translateY(-1px);
 }
-
 .tech-pill i {
   width: 14px; height: 14px;
-  /* Uses your theme color instead of a hardcoded red */
   color: hsl(var(--p-h), var(--p-s), 50%);
   stroke-width: 2.5px;
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 600px) {
   .footer__layout {
     flex-direction: column;
@@ -332,7 +349,6 @@ body {
   }
 }
 
-/* Back to Top (Standard) */
 .to-top {
   position: fixed; right: var(--space-24); bottom: var(--space-24);
   width: 44px; height: 44px;
@@ -466,23 +482,41 @@ body {
 .delay-100 { transition-delay: 0.1s; } .delay-200 { transition-delay: 0.2s; } .delay-300 { transition-delay: 0.3s; }
 .spin-anim { animation: spin 1s linear infinite; }
 
+/* --- BUTTON STYLE (MAIN) --- */
 .btn-main {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-8);
-  padding: var(--space-12) var(--space-24);
-  font-size: var(--font-size-base);
+  padding: var(--space-12) var(--space-16);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
   border-radius: var(--radius-pill);
   text-decoration: none; cursor: pointer;
   transition: all var(--duration-fast) var(--ease-default);
-  background: var(--color-btn-bg); color: var(--color-btn-text);
-  border: 1px solid var(--color-btn-bg); box-shadow: var(--shadow-btn);
+  background: var(--color-btn-bg);
+  color: var(--color-btn-text);
+  border: 1px solid var(--color-btn-bg);
+  box-shadow: var(--shadow-btn);
+  /* Fallback incase global reset missed it, but global handles it */
   -webkit-tap-highlight-color: transparent;
 }
-.btn-main:hover {
-  background: transparent; color: var(--color-text); border-color: var(--color-text);
-  transform: translateY(-2px); box-shadow: 0 6px 20px var(--color-shadow-nav);
+
+/* Hover = GROW (Only on devices with hover) */
+@media (hover: hover) {
+  .btn-main:hover {
+    background: var(--btn-hover-bg);
+    transform: scale(var(--btn-hover-scale));
+    box-shadow: var(--btn-hover-shadow);
+  }
 }
-.btn-main:active { transform: translateY(0) scale(0.98); box-shadow: none; }
+
+/* Click = PRESS */
+.btn-main:active {
+  background: var(--btn-active-bg);
+  transform: scale(var(--btn-active-scale));
+  box-shadow: var(--btn-active-shadow);
+  /* Ensure border color doesn't conflict */
+  border-color: transparent;
+}
+
 .btn-main i, .btn-main svg { width: 18px; height: 18px; }
 
 .section-title {
@@ -628,12 +662,11 @@ body {
 }
 .status-dot.pulse { animation: pulse-green 2s infinite; }
 .about__visual { display: flex; justify-content: center; position: relative; }
-/* ... existing about styles ... */
 
 .stack-wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16); /* Space between the label and the box */
+  gap: var(--space-16);
   width: 100%;
   max-width: var(--tech-panel-width);
 }
@@ -641,24 +674,18 @@ body {
 .stack-label {
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
-  color: var(--about-text-muted); /* Uses your muted color */
+  color: var(--about-text-muted);
   font-weight: var(--font-weight-med);
   padding-left: var(--space-4);
   opacity: 0.8;
 }
 
-.comment-syntax {
-  /* Optional: Make the slashes a slightly different color if you want */
-  color: var(--about-text-muted);
-}
+.comment-syntax { color: var(--about-text-muted); }
 
-/* Ensure the panel takes full width of the wrapper */
 .tech-glass-panel {
   width: 100%;
-  margin: 0; /* Remove auto margins since wrapper handles it */
-}
-.tech-glass-panel {
-  position: relative; width: 100%; max-width: var(--tech-panel-width);
+  margin: 0;
+  position: relative;
   background: color-mix(in oklab, var(--about-card-bg) 6%, transparent);
   border: 1px solid var(--color-border); border-radius: var(--radius-md);
   backdrop-filter: var(--blur-md); -webkit-backdrop-filter: var(--blur-md);
@@ -776,7 +803,6 @@ body {
 }
 
 .award-card {
-  /* Removed position:relative and overflow:hidden since the line is gone */
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
@@ -786,29 +812,22 @@ body {
   gap: var(--space-16);
   backdrop-filter: var(--blur-md);
   -webkit-backdrop-filter: var(--blur-md);
-
-  /* Smooth transitions for lift, border, and shadow */
   transition: transform var(--duration-med) var(--ease-default),
               border-color var(--duration-med) var(--ease-default),
               box-shadow var(--duration-med) var(--ease-default);
 }
-
-/* Hover State: Lift & Colored Glow (No Line) */
 .award-card:hover {
   transform: translateY(-6px);
   border-color: hsla(var(--p-h), var(--p-s), 60%, 0.3);
-  /* Themed colored shadow instead of gray */
   box-shadow: 0 12px 32px -8px hsla(var(--p-h), var(--p-s), 50%, 0.15);
 }
 
-/* Icon: Default is tinted, Hover is filled & Pops */
 .award-card__icon {
   width: 48px;
   height: 48px;
   display: grid;
   place-items: center;
   border-radius: var(--radius-pill);
-  /* Default: Subtle Theme Tint */
   background: hsla(var(--p-h), var(--p-s), 50%, 0.08);
   color: hsl(var(--p-h), var(--p-s), 40%);
   transition: all var(--duration-med) var(--bezier-bounce);
@@ -816,7 +835,7 @@ body {
 
 .award-card:hover .award-card__icon {
   background: hsl(var(--p-h), var(--p-s), 55%);
-  color: #ffffff; /* Icon turns white on colored bg */
+  color: #ffffff;
   transform: scale(1.1) rotate(-10deg);
   box-shadow: 0 4px 12px hsla(var(--p-h), var(--p-s), 50%, 0.3);
 }
@@ -842,7 +861,6 @@ body {
   margin-top: var(--space-8);
 }
 
-/* Meta Pills: React to Secondary Theme Color */
 .meta-pill {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
@@ -934,7 +952,11 @@ body {
     opacity: 1 !important; transform: none !important;
   }
 
-  .btn-main:hover, .navbar__theme-toggle:hover, .navbar__cta:hover,
+  /*
+   * FIXED: Removed button classes from here so they still click/press on mobile.
+   * Only disabling complex card hovers to prevent scroll jank.
+   */
+  .navbar__theme-toggle:hover,
   .tech-item:hover, .media-inner:hover, .tech-glass-panel:hover,
   .contact-chip:hover, .award-card:hover {
     transform: none !important; box-shadow: none !important;
