@@ -1,106 +1,232 @@
 /**
  * Main Application Script
- * Fixed: Removed delayed scroll jumping behavior in Preloader
  */
 'use strict';
 
-/* Theme Management (Conditional Animation) */
+/* 1. Theme Picker & Color Manager */
 (function () {
   const root = document.documentElement;
-  const savedTheme = localStorage.getItem('theme') || 'light';
   const toggleBtn = document.getElementById('theme-toggle');
+  const paletteBtn = document.getElementById('palette-toggle');
+  const modal = document.getElementById('theme-modal');
+  const closeBtn = document.getElementById('close-theme-modal');
+  const grid = document.getElementById('palette-grid');
+  const refreshBtn = document.getElementById('refresh-palettes');
+
+  // --- PREMIUM DEFAULT PALETTE ---
+  // Ideally, this should be Index 0.
+  // Deep Teal (Professional), Slate, Gold Accent, Light BG
+  const DEFAULT_PALETTE = ['#0f4c75', '#3282b8', '#bbe1fa', '#1b262c'];
+
+  const PALETTE_LIBRARY = [
+    DEFAULT_PALETTE, // Index 0 is always the default active one
+    ['#1b3c53', '#234c6a', '#456882', '#e3e3e3'],
+    ['#213448', '#547792', '#94b4c1', '#eae0cf'],
+    ['#050e3c', '#002455', '#dc0000', '#ff3838'],
+    ['#005461', '#018790', '#00b7b5', '#f4f4f4'],
+    ['#360185', '#8f0177', '#de1a58', '#f4b342'],
+    ['#1b211a', '#628141', '#8bae66', '#ebd5ab'],
+    ['#434e78', '#607b8f', '#f7e396', '#e97f4a'],
+    ['#5a9cb5', '#face68', '#faac68', '#fa6868'],
+    ['#3291b6', '#bb8ed0', '#e0a8a8', '#f1e2e2'],
+    ['#001f3d', '#ed985f', '#f7b980', '#e6e6e6'],
+    ['#8a8635', '#aa2b1d', '#cc561e', '#f3cf7a'],
+    ['#000080', '#ff0000', '#9e2a3a', '#3a2525'],
+    ['#4d2b8c', '#85409d', '#eea727', '#ffef5f'],
+    ['#222831', '#393e46', '#00adb5', '#eeeeee'],
+    ['#3f72af', '#112d4e', '#dbe2ef', '#f9f7f7'],
+    ['#ad8b73', '#ceab93', '#e3caa5', '#fffbe9'],
+    ['#1b262c', '#0f4c75', '#3282b8', '#bbe1fa'],
+    ['#27374d', '#526d82', '#9db2bf', '#dde6ed'],
+    ['#6096b4', '#93bfcf', '#bdcdd6', '#eee9da'],
+    ['#2c3e50', '#e74c3c', '#ecf0f1', '#3498db'],
+    ['#e94560', '#0f3460', '#16213e', '#1a1a2e'],
+    ['#008170', '#005b41', '#232d3f', '#0f0f0f'],
+    ['#bb2525', '#ff6969', '#141e46', '#fff5e4'],
+  ];
+
+  function hexToHSL(H) {
+    let r = 0, g = 0, b = 0;
+    if (H.length == 4) {
+      r = "0x" + H[1] + H[1]; g = "0x" + H[2] + H[2]; b = "0x" + H[3] + H[3];
+    } else if (H.length == 7) {
+      r = "0x" + H[1] + H[2]; g = "0x" + H[3] + H[4]; b = "0x" + H[5] + H[6];
+    }
+    r /= 255; g /= 255; b /= 255;
+    let cmin = Math.min(r,g,b), cmax = Math.max(r,g,b), delta = cmax - cmin;
+    let h = 0, s = 0, l = 0;
+    if (delta == 0) h = 0;
+    else if (cmax == r) h = ((g - b) / delta) % 6;
+    else if (cmax == g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+    l = (cmax + cmin) / 2;
+    s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+    s = +(s * 100).toFixed(1);
+    l = +(l * 100).toFixed(1);
+    return { h, s, l };
+  }
+
+  function updateMetaThemeColor(color) {
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    meta.content = color;
+  }
+
+  function applyPalette(colors) {
+    const vars = ['--p', '--s', '--t', '--n'];
+
+    updateMetaThemeColor(colors[0]);
+
+    colors.forEach((hex, index) => {
+      if (index > 3) return;
+      const hsl = hexToHSL(hex);
+      const prefix = vars[index];
+
+      root.style.setProperty(`${prefix}-h`, hsl.h);
+
+      if (index === 0) {
+         root.style.setProperty(`${prefix}-s`, hsl.s + '%');
+         root.style.setProperty(`${prefix}-l`, hsl.l + '%');
+         root.style.setProperty('--color-btn-text', '#ffffff');
+      } else if (index === 3) {
+         root.style.setProperty(`${prefix}-s`, Math.min(hsl.s, 20) + '%');
+         root.style.removeProperty(`${prefix}-l`);
+      } else {
+         root.style.setProperty(`${prefix}-s`, hsl.s + '%');
+         root.style.setProperty(`${prefix}-l`, hsl.l + '%');
+      }
+    });
+
+    localStorage.setItem('custom-palette', JSON.stringify(colors));
+
+    // Update active state visually in the grid if open
+    updateActiveGridState(colors);
+  }
+
+  function updateActiveGridState(activeColors) {
+    const cards = document.querySelectorAll('.palette-card');
+    cards.forEach(card => {
+        // Simple equality check by joining arrays to strings
+        const cardColors = JSON.parse(card.getAttribute('data-colors'));
+        if (JSON.stringify(cardColors) === JSON.stringify(activeColors)) {
+            card.classList.add('is-active-palette');
+            card.style.ring = '2px solid var(--color-text)';
+            card.style.transform = 'scale(0.95)';
+        } else {
+            card.classList.remove('is-active-palette');
+            card.style.ring = 'none';
+            card.style.transform = '';
+        }
+    });
+  }
+
+  function renderPalettes() {
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    // Always include the current active/default one first
+    const current = JSON.parse(localStorage.getItem('custom-palette')) || DEFAULT_PALETTE;
+
+    // Get 3 other random ones (filtering out the current one to avoid dups)
+    const others = PALETTE_LIBRARY
+        .filter(p => JSON.stringify(p) !== JSON.stringify(current))
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 3);
+
+    const displayList = [current, ...others];
+
+    displayList.forEach(colors => {
+      const card = document.createElement('button');
+      card.className = 'palette-card';
+      card.setAttribute('aria-label', 'Select this color palette');
+      card.setAttribute('data-colors', JSON.stringify(colors)); // Store for easy check
+
+      const preview = document.createElement('div');
+      preview.className = 'palette-preview';
+
+      colors.forEach(c => {
+        const stripe = document.createElement('div');
+        stripe.style.backgroundColor = c;
+        preview.appendChild(stripe);
+      });
+
+      card.appendChild(preview);
+
+      // Check if this is the active one to style it immediately
+      if (JSON.stringify(colors) === JSON.stringify(current)) {
+          card.classList.add('is-active-palette');
+      }
+
+      card.addEventListener('click', () => {
+        if (document.startViewTransition) {
+             document.startViewTransition(() => applyPalette(colors));
+        } else {
+             applyPalette(colors);
+        }
+        // Don't close immediately so user sees the selection change
+        setTimeout(() => modal.close(), 300);
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  // --- INITIALIZATION ---
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  // Load saved palette OR default to premium one
+  const savedPalette = JSON.parse(localStorage.getItem('custom-palette')) || DEFAULT_PALETTE;
 
   root.classList.add(savedTheme === 'dark' ? 'dark-theme' : 'light-theme');
+  applyPalette(savedPalette);
 
   function updateIcon(theme) {
     if (!toggleBtn) return;
     toggleBtn.innerHTML = theme === 'dark'
       ? '<i data-lucide="moon"></i>'
       : '<i data-lucide="sun"></i>';
-    if (typeof lucide !== 'undefined' && lucide.createIcons) {
-      lucide.createIcons();
-    }
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
   }
-
   updateIcon(savedTheme);
 
-  if (!toggleBtn) return;
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', (e) => {
+      const isDark = root.classList.contains('dark-theme');
+      const nextTheme = isDark ? 'light' : 'dark';
 
-  toggleBtn.addEventListener('click', async (event) => {
-    const isDark = root.classList.contains('dark-theme');
-    const nextTheme = isDark ? 'light' : 'dark';
+      const transition = () => {
+        root.classList.toggle('dark-theme', !isDark);
+        root.classList.toggle('light-theme', isDark);
+        localStorage.setItem('theme', nextTheme);
+        updateIcon(nextTheme);
+      };
 
-    // CHECK: Is screen small (mobile) OR is the Transition API missing?
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    const supportsTransition = document.startViewTransition;
-
-    // IF mobile or no support -> Simple Toggle (No Animation)
-    if (isMobile || !supportsTransition) {
-      root.classList.toggle('dark-theme', !isDark);
-      root.classList.toggle('light-theme', isDark);
-      localStorage.setItem('theme', nextTheme);
-      updateIcon(nextTheme);
-      return;
-    }
-
-    // ELSE -> Run Desktop Ripple Animation
-    const x = event.clientX;
-    const y = event.clientY;
-    const endRadius = Math.hypot(
-      Math.max(x, innerWidth - x),
-      Math.max(y, innerHeight - y)
-    );
-
-    const ripple = document.createElement('div');
-    ripple.classList.add('theme-transition-ripple');
-    ripple.style.left = `${x}px`;
-    ripple.style.top = `${y}px`;
-    document.body.appendChild(ripple);
-
-    const transition = document.startViewTransition(() => {
-      root.classList.toggle('dark-theme', !isDark);
-      root.classList.toggle('light-theme', isDark);
-      localStorage.setItem('theme', nextTheme);
-      updateIcon(nextTheme);
+      if (document.startViewTransition) document.startViewTransition(transition);
+      else transition();
     });
+  }
 
-    await transition.ready;
-
-    document.documentElement.animate(
-      {
-        clipPath: [
-          `circle(0px at ${x}px ${y}px)`,
-          `circle(${endRadius}px at ${x}px ${y}px)`,
-        ],
-      },
-      {
-        duration: 400,
-        easing: 'ease-in',
-        pseudoElement: '::view-transition-new(root)',
+  if (paletteBtn && modal) {
+    paletteBtn.addEventListener('click', (e) => { e.stopPropagation(); renderPalettes(); modal.showModal(); });
+  }
+  if (closeBtn) closeBtn.addEventListener('click', () => modal.close());
+  if (refreshBtn) refreshBtn.addEventListener('click', renderPalettes);
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      const rect = modal.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
+        modal.close();
       }
-    );
-
-    const rippleAnimation = ripple.animate(
-      {
-        width: ['0px', `${endRadius * 2}px`],
-        height: ['0px', `${endRadius * 2}px`],
-        opacity: [1, 0],
-        borderWidth: ['50px', '20px']
-      },
-      {
-        duration: 400,
-        easing: 'ease-in',
-        fill: 'forwards'
-      }
-    );
-
-    rippleAnimation.onfinish = () => {
-      ripple.remove();
-    };
-  });
+    });
+  }
 })();
 
-/* Navigation Router */
+/* 2. Navigation Router */
 (function () {
   const navMenu = document.querySelector('.navbar__menu');
   const mobileBtn = document.getElementById('mobile-menu-btn');
@@ -129,10 +255,7 @@ document.addEventListener('click', (ev) => {
     if (!el) return;
 
     ev.preventDefault();
-
-    // --- ADD THIS LINE ---
-    el.blur(); // Removes focus immediately to prevent sticky styles on tablets
-    // ---------------------
+    el.blur();
 
     const href = el.getAttribute('href');
 
@@ -186,9 +309,6 @@ document.addEventListener('click', (ev) => {
   window.addEventListener('scroll', updateActiveState, { passive: true });
 
   window.addEventListener('load', () => {
-    // If you want to rely purely on browser native scroll restoration,
-    // you can comment out this block too.
-    // For now, I'm leaving it as it runs immediately on load, unlike the preloader one.
     if (location.hash) {
       const target = document.querySelector(location.hash);
       if (target) {
@@ -203,7 +323,7 @@ document.addEventListener('click', (ev) => {
   });
 })();
 
-/* Back-To-Top Utility */
+/* 3. Back-To-Top Utility */
 (function () {
   const btn = document.getElementById('to-top');
   if (!btn) return;
@@ -222,7 +342,7 @@ document.addEventListener('click', (ev) => {
   });
 })();
 
-/* Scroll Reveal Animations */
+/* 4. Scroll Reveal Animations */
 (function () {
   if (window.innerWidth < 1024) return;
 
@@ -271,7 +391,7 @@ document.addEventListener('click', (ev) => {
   animatedElements.forEach((el) => observer.observe(el));
 })();
 
-/* Custom Cursor */
+/* 5. Custom Cursor */
 (function () {
   if (window.innerWidth < 1024 || window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
 
@@ -418,7 +538,7 @@ document.addEventListener('click', (ev) => {
   loop();
 })();
 
-/* Contact Form & Toasts */
+/* 6. Contact Form & Toasts */
 (function () {
   const form = document.querySelector('.contact-form');
   if (!form) return;
@@ -493,27 +613,13 @@ document.addEventListener('click', (ev) => {
   });
 })();
 
-/* Page Preloader & Smart Scroll */
+/* 7. Page Preloader & Smart Scroll */
 (function () {
   const preloader = document.getElementById('preloader');
   if (!preloader) return;
 
-  // FIX: This delayed function was causing the jump after scroll.
-  // It has been commented out to fix the bug.
-  /*
-  const handleInitialScroll = () => {
-    if (window.location.hash) {
-      const target = document.querySelector(window.location.hash);
-      if (target) {
-        target.scrollIntoView({ behavior: 'auto', block: 'start' });
-      }
-    }
-  };
-  */
-
   const dismissPreloader = () => {
     preloader.classList.add('is-loaded');
-    // handleInitialScroll(); // Removed
     setTimeout(() => {
       preloader.style.display = 'none';
     }, 650);
@@ -525,60 +631,3 @@ document.addEventListener('click', (ev) => {
 
   setTimeout(dismissPreloader, 5000);
 })();
-
-/* Dynamic Color Palette */
-window.setThemePalette = function(color1, color2, color3, color4) {
-  function hexToHSL(H) {
-    let r = 0, g = 0, b = 0;
-    if (H.length == 4) {
-      r = "0x" + H[1] + H[1]; g = "0x" + H[2] + H[2]; b = "0x" + H[3] + H[3];
-    } else if (H.length == 7) {
-      r = "0x" + H[1] + H[2]; g = "0x" + H[3] + H[4]; b = "0x" + H[5] + H[6];
-    }
-    r /= 255; g /= 255; b /= 255;
-    let cmin = Math.min(r,g,b), cmax = Math.max(r,g,b), delta = cmax - cmin;
-    let h = 0, s = 0, l = 0;
-
-    if (delta == 0) h = 0;
-    else if (cmax == r) h = ((g - b) / delta) % 6;
-    else if (cmax == g) h = (b - r) / delta + 2;
-    else h = (r - g) / delta + 4;
-
-    h = Math.round(h * 60);
-    if (h < 0) h += 360;
-    l = (cmax + cmin) / 2;
-    s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
-    s = +(s * 100).toFixed(1);
-    l = +(l * 100).toFixed(1);
-    return { h, s, l };
-  }
-
-  const root = document.documentElement;
-
-  const p = hexToHSL(color1);
-  const s = hexToHSL(color2);
-  const t = hexToHSL(color3);
-  const n = hexToHSL(color4);
-
-  root.style.setProperty('--p-h', p.h);
-  root.style.setProperty('--p-s', p.s + '%');
-  root.style.setProperty('--p-l', p.l + '%');
-
-  root.style.setProperty('--s-h', s.h);
-  root.style.setProperty('--s-s', s.s + '%');
-  root.style.setProperty('--s-l', s.l + '%');
-
-  root.style.setProperty('--t-h', t.h);
-  root.style.setProperty('--t-s', t.s + '%');
-  root.style.setProperty('--t-l', t.l + '%');
-
-  root.style.setProperty('--n-h', n.h);
-  root.style.setProperty('--n-s', Math.min(n.s, 20) + '%');
-  root.style.setProperty('--n-l', '95%');
-
-  console.log('Theme Updated:', {p, s, t, n});
-};
-
-//setThemePalette('#FF5733', '#C70039', '#900C3F', '#F5F5F5');
-// setThemePalette('#1B3C53', '#1B3C53', '#1B3C53', '#1B3C53');
-// setThemePalette('#360185', '#8F0177', '#DE1A58', '#F4B342');

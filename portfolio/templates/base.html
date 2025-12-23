@@ -68,30 +68,52 @@
     {% block content %}{% endblock %}
   </main>
 
-<footer class="footer">
-  <div class="container footer__layout">
+  <footer class="footer">
+    <div class="container footer__layout">
 
-    <div class="footer__left">
-      <p class="footer__copy">
-        &copy; 2025 <span class="opacity-50">All rights reserved.</span>
-      </p>
-    </div>
-
-    <div class="footer__right">
-      <div class="tech-pill">
-        <span>Designed & Built by</span>
-        <i data-lucide="code-2"></i> <span>Muthukumaran</span>
+      <div class="footer__left">
+        <p class="footer__copy">
+          &copy; 2025 <span class="opacity-50">All rights reserved.</span>
+        </p>
       </div>
-    </div>
 
-  </div>
-</footer>
+      <div class="footer__right">
+        <div class="tech-pill">
+          <span>Designed & Built by</span>
+          <i data-lucide="code-2"></i> <span>Muthukumaran</span>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <button id="palette-toggle" class="floating-palette-btn" aria-label="Change Color Theme">
+    <i data-lucide="palette"></i>
+  </button>
 
   <button id="to-top" class="to-top" aria-label="Back to top" title="Back to top">
     <i data-lucide="arrow-up" aria-hidden="true"></i>
   </button>
 
   <div id="toast-container" class="toast-container"></div>
+
+  <dialog id="theme-modal" class="theme-modal">
+    <div class="theme-modal__content">
+      <div class="theme-modal__header">
+        <h3>Pick a Mood</h3>
+        <button id="close-theme-modal" class="btn-icon"><i data-lucide="x"></i></button>
+      </div>
+      <p class="theme-modal__desc">Select a color palette to apply it instantly.</p>
+
+      <div id="palette-grid" class="palette-grid"></div>
+
+      <div class="theme-modal__footer">
+        <button id="refresh-palettes" class="btn-text">
+          <i data-lucide="refresh-cw"></i> Shuffle New Palettes
+        </button>
+      </div>
+    </div>
+  </dialog>
 
   {% block scripts %}{% endblock %}
 </body>
