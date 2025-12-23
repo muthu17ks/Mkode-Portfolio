@@ -543,13 +543,17 @@ document.addEventListener('click', (ev) => {
   const form = document.querySelector('.contact-form');
   if (!form) return;
   const submitBtn = form.querySelector('button[type="submit"]');
+  // Store original content to restore it later
   const originalBtnContent = submitBtn.innerHTML;
 
   function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     if (!container) return;
+
     const toast = document.createElement('div');
     toast.className = `toast toast--${type}`;
+
+    // Icons
     let iconName = 'info';
     if (type === 'success') iconName = 'check-circle';
     if (type === 'error') iconName = 'alert-circle';
@@ -560,41 +564,52 @@ document.addEventListener('click', (ev) => {
       <div class="toast__message">${message}</div>
       <button class="toast__close" aria-label="Close" type="button" data-cursor-ignore><i data-lucide="x"></i></button>
     `;
+
+    // Append to container (Fixed position, so no layout shift)
     container.appendChild(toast);
+
+    // Refresh icons
     if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
 
-    if (type === 'loading' && !document.getElementById('spin-style')) {
-      const style = document.createElement('style');
-      style.id = 'spin-style';
-      style.innerHTML = `@keyframes spin { 100% { transform: rotate(360deg); } } .spin-anim { animation: spin 1s linear infinite; }`;
-      document.head.appendChild(style);
+    // Auto remove logic
+    const removeToast = () => {
+      toast.classList.add('is-hiding');
+      toast.addEventListener('transitionend', () => toast.remove());
+      // Fallback in case transitionend doesn't fire
+      setTimeout(() => { if(toast.parentElement) toast.remove(); }, 400);
+    };
+
+    toast.querySelector('.toast__close').addEventListener('click', removeToast);
+
+    if (type !== 'loading') {
+        setTimeout(removeToast, 5000);
     }
 
-    let autoCloseTimer = null;
-    const removeToast = () => {
-      if (autoCloseTimer) clearTimeout(autoCloseTimer);
-      toast.classList.add('is-hiding');
-      const onEnd = () => { if (toast.parentElement) toast.remove(); };
-      toast.addEventListener('transitionend', onEnd, { once: true });
-      setTimeout(onEnd, 400);
-    };
-    toast.querySelector('.toast__close').addEventListener('click', (e) => { e.stopPropagation(); removeToast(); });
-    if (type !== 'loading') autoCloseTimer = setTimeout(removeToast, 5000);
     return { remove: removeToast };
   }
 
   form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // STOP PAGE RELOAD
+
+    // Disable button to prevent double-click glitches
     submitBtn.disabled = true;
+    submitBtn.style.cursor = 'not-allowed'; // Visual feedback
     submitBtn.innerHTML = `<i data-lucide="loader-2" class="spin-anim"></i> <span>Sending...</span>`;
+
     if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
-    const loadingToastControl = showToast('Sending your message...', 'loading');
+
+    const loadingToast = showToast('Sending your message...', 'loading');
 
     try {
       const formData = new FormData(form);
-      const response = await fetch(form.action, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const response = await fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+
       const data = await response.json();
-      if (loadingToastControl) loadingToastControl.remove();
+      if (loadingToast) loadingToast.remove();
 
       if (response.ok && data.status === 'success') {
         showToast(data.message, 'success');
@@ -603,10 +618,12 @@ document.addEventListener('click', (ev) => {
         showToast(data.message || 'Something went wrong.', 'error');
       }
     } catch (error) {
-      if (loadingToastControl) loadingToastControl.remove();
-      showToast('Network error.', 'error');
+      if (loadingToast) loadingToast.remove();
+      showToast('Network error. Please try again.', 'error');
     } finally {
+      // Restore button
       submitBtn.disabled = false;
+      submitBtn.style.cursor = '';
       submitBtn.innerHTML = originalBtnContent;
       if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
     }
