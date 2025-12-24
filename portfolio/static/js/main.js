@@ -403,12 +403,10 @@ document.addEventListener('click', (ev) => {
 
   let mouseX = -100, mouseY = -100;
   let ringX = -100, ringY = -100;
-  let ringW = 40, ringH = 40;
 
   let lockedItem = null;
   let hasMoved = false;
   let isUnlocking = false;
-  let isIdle = false;
 
   const LERP_SPEED = 0.15;
 
@@ -424,11 +422,6 @@ document.addEventListener('click', (ev) => {
       dot.style.opacity = '1'; ring.style.opacity = '1';
     }
 
-    if (isIdle) {
-      isIdle = false;
-      loop();
-    }
-
     dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
   });
 
@@ -440,9 +433,7 @@ document.addEventListener('click', (ev) => {
   function shouldIgnore(el) {
     if (!el) return true;
     if (el.hasAttribute('data-cursor-ignore')) return true;
-
     if (el.closest('.project-card__media')) return true;
-
     if (el.closest('.contact-form-wrapper')) {
       if (el.matches('input, textarea, select, label')) return true;
     }
@@ -475,61 +466,75 @@ document.addEventListener('click', (ev) => {
   function loop() {
     if (!hasMoved) { requestAnimationFrame(loop); return; }
 
-    const distMoved = Math.abs(mouseX - ringX) + Math.abs(mouseY - ringY);
-    const sizeDiff = Math.abs(ringW - 40) + Math.abs(ringH - 40);
-
-    if (distMoved < 0.1 && sizeDiff < 0.5 && !lockedItem && !isUnlocking) {
-      isIdle = true;
-      return;
-    }
-
-    let targetX = mouseX, targetY = mouseY;
-    let targetWidth = 40, targetHeight = 40;
+    let targetX = mouseX;
+    let targetY = mouseY;
+    let targetWidth = 40;
+    let targetHeight = 40;
     let targetRadius = '50%';
-    let scaleX = 1, scaleY = 1, rotation = 0;
+    let scaleX = 1;
+    let scaleY = 1;
+    let rotation = 0;
 
+    const RING_LERP = lockedItem ? 0.2 : 0.15;
+
+    // --- LOCKED STATE ---
     if (lockedItem) {
       const rect = lockedItem.getBoundingClientRect();
-      targetX = rect.left + rect.width / 2;
-      targetY = rect.top + rect.height / 2;
-      targetWidth = rect.width + 16;
-      targetHeight = rect.height + 16;
       const style = window.getComputedStyle(lockedItem);
+
+      // 1. Calculate Center
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      // 2. Set Ring Target to Center
+      targetX = centerX;
+      targetY = centerY;
+      targetWidth = rect.width + 12;
+      targetHeight = rect.height + 12;
       targetRadius = style.borderRadius || '50%';
 
+      // 3. Move the Element (Magnetic)
       if (lockedItem !== avatar) {
-        const dx = mouseX - targetX, dy = mouseY - targetY;
-        lockedItem.style.transform = `translate(${dx * 0.3}px, ${dy * 0.3}px)`;
+        const moveX = mouseX - centerX;
+        const moveY = mouseY - centerY;
+        lockedItem.style.transform = `translate(${moveX * 0.3}px, ${moveY * 0.3}px)`;
         lockedItem.style.transition = 'transform 0.1s linear';
       } else {
-        const dx = mouseX - targetX, dy = mouseY - targetY;
-        if (Math.hypot(dx, dy) < Math.max(160, rect.width * 0.6)) {
-          avatar.style.transform = `translate(${dx * 0.25}px, ${dy * 0.25}px)`;
-          avatar.style.transition = 'transform 0.12s linear';
-        } else {
-          avatar.style.transform = '';
-        }
+         const moveX = mouseX - centerX;
+         const moveY = mouseY - centerY;
+         if (Math.hypot(moveX, moveY) < Math.max(160, rect.width * 0.6)) {
+           avatar.style.transform = `translate(${moveX * 0.25}px, ${moveY * 0.25}px)`;
+           avatar.style.transition = 'transform 0.12s linear';
+         } else {
+           avatar.style.transform = '';
+         }
       }
+
+      // 4. PREVENT GLITCH: Force scale to 1 when locked
+      scaleX = 1;
+      scaleY = 1;
+      rotation = 0;
+
     } else {
-      targetX = mouseX;
-      targetY = mouseY;
+      // --- UNLOCKED STATE ---
+      if (!isUnlocking) {
+        const deltaX = mouseX - ringX;
+        const deltaY = mouseY - ringY;
+        const dist = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+        const stretch = Math.min(dist * 0.004, 0.3);
+        scaleX = 1 + stretch;
+        scaleY = 1 - stretch * 0.5;
+        if (dist > 1) rotation = Math.atan2(deltaY, deltaX);
+      }
     }
 
-    ringX += (targetX - ringX) * LERP_SPEED;
-    ringY += (targetY - ringY) * LERP_SPEED;
-    ringW += (targetWidth - ringW) * LERP_SPEED;
-    ringH += (targetHeight - ringH) * LERP_SPEED;
+    // Smoothly Move Ring
+    ringX += (targetX - ringX) * RING_LERP;
+    ringY += (targetY - ringY) * RING_LERP;
 
-    if (!lockedItem && !isUnlocking) {
-      const deltaX = targetX - ringX, deltaY = targetY - ringY;
-      const dist = Math.sqrt(deltaX ** 2 + deltaY ** 2);
-      const stretch = Math.min(dist * 0.004, 0.3);
-      scaleX = 1 + stretch; scaleY = 1 - stretch * 0.5;
-      if (dist > 1) rotation = Math.atan2(deltaY, deltaX);
-    }
-
-    ring.style.width = `${ringW}px`;
-    ring.style.height = `${ringH}px`;
+    // Apply Styles
+    ring.style.width = `${targetWidth}px`;
+    ring.style.height = `${targetHeight}px`;
     ring.style.borderRadius = targetRadius;
     ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%) rotate(${rotation}rad) scale(${scaleX}, ${scaleY})`;
 
