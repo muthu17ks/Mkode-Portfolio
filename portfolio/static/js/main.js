@@ -393,16 +393,16 @@ document.addEventListener('click', (ev) => {
 
 /* 5. Custom Cursor */
 (function () {
-  if (window.innerWidth < 1024 || window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
-
   const dot = document.querySelector('.cursor__dot');
   const ring = document.querySelector('.cursor__ring');
   const avatar = document.querySelector('.hero__avatar');
 
   if (!dot || !ring) return;
 
+  // 1. STATE VARIABLES
   let mouseX = -100, mouseY = -100;
   let ringX = -100, ringY = -100;
+  let isCursorActive = false; // Master switch
 
   let lockedItem = null;
   let hasMoved = false;
@@ -410,21 +410,70 @@ document.addEventListener('click', (ev) => {
 
   const LERP_SPEED = 0.15;
 
-  dot.style.opacity = '0';
-  ring.style.opacity = '0';
+  // 2. CHECK FOR MOUSE (MEDIA QUERY)
+  // This matches your CSS: Only enable if device supports hover AND has a fine pointer (mouse/trackpad)
+  // We remove the width check because some tablets are wide but touch-only.
+  const mouseQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
 
-  window.addEventListener('mousemove', (e) => {
+  function handleDeviceChange(e) {
+    if (e.matches) {
+      // Mouse connected / Desktop detected
+      startCursor();
+    } else {
+      // Touch device / Mouse disconnected
+      stopCursor();
+    }
+  }
+
+  // Listen for changes (e.g. connecting a mouse to iPad/Android)
+  mouseQuery.addEventListener('change', handleDeviceChange);
+
+  // 3. START / STOP LOGIC
+  function startCursor() {
+    if (isCursorActive) return;
+    isCursorActive = true;
+    dot.style.display = 'block'; // Ensure visibility logic
+    ring.style.display = 'block';
+
+    // Attach listeners
+    window.addEventListener('mousemove', onMouseMove);
+    attachCursorListeners();
+    requestAnimationFrame(loop);
+  }
+
+  function stopCursor() {
+    isCursorActive = false;
+    dot.style.display = 'none';
+    ring.style.display = 'none';
+
+    // Detach listeners to save performance
+    window.removeEventListener('mousemove', onMouseMove);
+
+    // Reset any magnetically locked items immediately
+    if (lockedItem) {
+        lockedItem.style.transform = '';
+        lockedItem = null;
+    }
+
+    // Note: We don't remove 'mouseenter' listeners from elements because that's complex,
+    // but the 'loop' won't run, so magnetic effects effectively stop.
+  }
+
+  // 4. MOUSE MOVE HANDLER
+  function onMouseMove(e) {
     mouseX = e.clientX;
     mouseY = e.clientY;
 
     if (!hasMoved) {
-      ringX = mouseX; ringY = mouseY; hasMoved = true;
+      ringX = mouseX; ringY = mouseY;
+      hasMoved = true;
       dot.style.opacity = '1'; ring.style.opacity = '1';
     }
 
     dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
-  });
+  }
 
+  // 5. ATTACH MAGNET LISTENERS
   const interactiveSelectors = [
     'a', 'button', '.btn-main', '.btn-hero-primary',
     '.hero__avatar', '.tech-item', '[role="button"]', '.tech-badge'
@@ -441,29 +490,46 @@ document.addEventListener('click', (ev) => {
   }
 
   function attachCursorListeners() {
+    // Only attach if cursor is active to prevent touch firing
+    if (!isCursorActive) return;
+
     const candidates = Array.from(document.querySelectorAll(interactiveSelectors))
       .filter((el) => !el.__cursorAttached && !shouldIgnore(el));
 
     candidates.forEach((el) => {
       el.__cursorAttached = true;
-      el.addEventListener('mouseenter', () => { lockedItem = el; ring.classList.add('is-locked'); });
+      el.addEventListener('mouseenter', () => {
+          if(isCursorActive) {
+            lockedItem = el;
+            ring.classList.add('is-locked');
+          }
+      });
       el.addEventListener('mouseleave', () => {
-        if (lockedItem === el) {
-          lockedItem = null; ring.classList.remove('is-locked'); isUnlocking = true;
-          el.style.transform = ''; el.style.transition = 'transform 0.3s ease';
+        if (isCursorActive && lockedItem === el) {
+          lockedItem = null;
+          ring.classList.remove('is-locked');
+          isUnlocking = true;
+          el.style.transform = '';
+          el.style.transition = 'transform 0.3s ease';
           setTimeout(() => { isUnlocking = false; }, 200);
         }
       });
     });
   }
-  attachCursorListeners();
 
+  // Observer for new elements
   if ('MutationObserver' in window) {
-    const mo = new MutationObserver(() => { setTimeout(attachCursorListeners, 50); });
+    const mo = new MutationObserver(() => {
+        if(isCursorActive) setTimeout(attachCursorListeners, 50);
+    });
     mo.observe(document.body, { childList: true, subtree: true });
   }
 
+  // 6. ANIMATION LOOP
   function loop() {
+    // Stop loop if disabled
+    if (!isCursorActive) return;
+
     if (!hasMoved) { requestAnimationFrame(loop); return; }
 
     let targetX = mouseX;
@@ -482,18 +548,16 @@ document.addEventListener('click', (ev) => {
       const rect = lockedItem.getBoundingClientRect();
       const style = window.getComputedStyle(lockedItem);
 
-      // 1. Calculate Center
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      // 2. Set Ring Target to Center
       targetX = centerX;
       targetY = centerY;
       targetWidth = rect.width + 12;
       targetHeight = rect.height + 12;
       targetRadius = style.borderRadius || '50%';
 
-      // 3. Move the Element (Magnetic)
+      // Move Element (Magnetic)
       if (lockedItem !== avatar) {
         const moveX = mouseX - centerX;
         const moveY = mouseY - centerY;
@@ -510,10 +574,7 @@ document.addEventListener('click', (ev) => {
          }
       }
 
-      // 4. PREVENT GLITCH: Force scale to 1 when locked
-      scaleX = 1;
-      scaleY = 1;
-      rotation = 0;
+      scaleX = 1; scaleY = 1; rotation = 0;
 
     } else {
       // --- UNLOCKED STATE ---
@@ -528,11 +589,9 @@ document.addEventListener('click', (ev) => {
       }
     }
 
-    // Smoothly Move Ring
     ringX += (targetX - ringX) * RING_LERP;
     ringY += (targetY - ringY) * RING_LERP;
 
-    // Apply Styles
     ring.style.width = `${targetWidth}px`;
     ring.style.height = `${targetHeight}px`;
     ring.style.borderRadius = targetRadius;
@@ -540,7 +599,12 @@ document.addEventListener('click', (ev) => {
 
     requestAnimationFrame(loop);
   }
-  loop();
+
+  // 7. INITIAL CHECK
+  // Initialize based on current state
+  if (mouseQuery.matches) {
+      startCursor();
+  }
 })();
 
 /* 6. Contact Form & Toasts */
