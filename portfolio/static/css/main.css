@@ -220,12 +220,15 @@ body {
 .fluid-particle:nth-child(2) { animation-delay: calc(var(--loader-speed) * -0.2); } .fluid-particle:nth-child(3) { animation-delay: calc(var(--loader-speed) * -0.4); } .fluid-particle:nth-child(4) { animation-delay: calc(var(--loader-speed) * -0.6); } .fluid-particle:nth-child(5) { animation-delay: calc(var(--loader-speed) * -0.8); }
 @keyframes fluid-stream { 0%, 100% { transform: translateX(0) scale(0); } 50% { transform: translateX(calc(var(--loader-size) * 0.5)) scale(1); } 99.999% { transform: translateX(calc(var(--loader-size))) scale(0); } }
 
-/* --- CUSTOM CURSOR --- */
+/* ==========================================================
+   CUSTOM CURSOR (Capability Based)
+   ========================================================== */
 .cursor {
   position: fixed; top: 0; left: 0; z-index: var(--z-cursor); pointer-events: none;
-  /* Default: HIDDEN (Only show on desktop) */
+  /* Default: HIDDEN for all devices */
   display: none;
 }
+
 .cursor__dot {
   position: absolute; top: 0; left: 0;
   width: var(--size-cursor-dot); height: var(--size-cursor-dot);
@@ -233,6 +236,7 @@ body {
   transform: translate(-50%, -50%); z-index: 2;
   transition: opacity 0.3s ease;
 }
+
 .cursor__ring {
   position: absolute; top: 0; left: 0;
   width: var(--size-cursor-ring); height: var(--size-cursor-ring);
@@ -243,7 +247,7 @@ body {
   backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
   z-index: 1;
 
-  /* FIX: Use CSS Transitions for size, JS for position */
+  /* Smooth Size Transitions */
   transition:
     width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
     height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
@@ -254,6 +258,7 @@ body {
 
   will-change: transform, width, height, border-radius;
 }
+
 .cursor__ring.is-locked {
   background: var(--color-cursor-locked-bg);
   border-color: var(--color-cursor-locked-border);
@@ -262,10 +267,14 @@ body {
   -webkit-backdrop-filter: blur(8px) saturate(160%);
   mix-blend-mode: overlay;
 }
+
 .cursor:has(.cursor__ring.is-locked) .cursor__dot { opacity: 0; }
 
-/* ONLY SHOW CURSOR ON DESKTOP (Larger than 1024px AND supports hover) */
-@media (min-width: 1025px) and (hover: hover) and (pointer: fine) {
+/* THE "OPTIMISTIC" FIX:
+   Only show cursor if the device supports Hover AND has a Fine Pointer (Mouse).
+   This ignores screen size.
+*/
+@media (hover: hover) and (pointer: fine) {
   .cursor { display: block; }
 }
 

@@ -391,7 +391,7 @@ document.addEventListener('click', (ev) => {
   animatedElements.forEach((el) => observer.observe(el));
 })();
 
-/* 5. Custom Cursor */
+/* 5. Custom Cursor (Capability Aware) */
 (function () {
   const dot = document.querySelector('.cursor__dot');
   const ring = document.querySelector('.cursor__ring');
@@ -399,43 +399,39 @@ document.addEventListener('click', (ev) => {
 
   if (!dot || !ring) return;
 
-  // 1. STATE VARIABLES
+  // State
   let mouseX = -100, mouseY = -100;
   let ringX = -100, ringY = -100;
-  let isCursorActive = false; // Master switch
-
+  let isCursorActive = false; // The master switch
   let lockedItem = null;
   let hasMoved = false;
   let isUnlocking = false;
 
-  const LERP_SPEED = 0.15;
+  // --- THE OPTIMISTIC CHECK ---
+  // Matches CSS: (hover: hover) AND (pointer: fine)
+  // This detects "Mouse Capability", not "Screen Size".
+  const capabilityQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
 
-  // 2. CHECK FOR MOUSE (MEDIA QUERY)
-  // This matches your CSS: Only enable if device supports hover AND has a fine pointer (mouse/trackpad)
-  // We remove the width check because some tablets are wide but touch-only.
-  const mouseQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
-
-  function handleDeviceChange(e) {
+  // 1. Handle Capability Changes (e.g. connecting a mouse to tablet)
+  function handleCapabilityChange(e) {
     if (e.matches) {
-      // Mouse connected / Desktop detected
       startCursor();
     } else {
-      // Touch device / Mouse disconnected
       stopCursor();
     }
   }
 
-  // Listen for changes (e.g. connecting a mouse to iPad/Android)
-  mouseQuery.addEventListener('change', handleDeviceChange);
+  capabilityQuery.addEventListener('change', handleCapabilityChange);
 
-  // 3. START / STOP LOGIC
+  // 2. Start/Stop Logic
   function startCursor() {
     if (isCursorActive) return;
     isCursorActive = true;
-    dot.style.display = 'block'; // Ensure visibility logic
+
+    // Force CSS match (Just in case JS loads before CSS paints)
+    dot.style.display = 'block';
     ring.style.display = 'block';
 
-    // Attach listeners
     window.addEventListener('mousemove', onMouseMove);
     attachCursorListeners();
     requestAnimationFrame(loop);
@@ -445,35 +441,27 @@ document.addEventListener('click', (ev) => {
     isCursorActive = false;
     dot.style.display = 'none';
     ring.style.display = 'none';
-
-    // Detach listeners to save performance
     window.removeEventListener('mousemove', onMouseMove);
 
-    // Reset any magnetically locked items immediately
+    // Clean up locked state
     if (lockedItem) {
-        lockedItem.style.transform = '';
-        lockedItem = null;
+      lockedItem.style.transform = '';
+      lockedItem = null;
     }
-
-    // Note: We don't remove 'mouseenter' listeners from elements because that's complex,
-    // but the 'loop' won't run, so magnetic effects effectively stop.
   }
 
-  // 4. MOUSE MOVE HANDLER
+  // 3. Mouse Movement
   function onMouseMove(e) {
     mouseX = e.clientX;
     mouseY = e.clientY;
-
     if (!hasMoved) {
-      ringX = mouseX; ringY = mouseY;
-      hasMoved = true;
+      ringX = mouseX; ringY = mouseY; hasMoved = true;
       dot.style.opacity = '1'; ring.style.opacity = '1';
     }
-
     dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
   }
 
-  // 5. ATTACH MAGNET LISTENERS
+  // 4. Magnet Listeners
   const interactiveSelectors = [
     'a', 'button', '.btn-main', '.btn-hero-primary',
     '.hero__avatar', '.tech-item', '[role="button"]', '.tech-badge'
@@ -490,8 +478,7 @@ document.addEventListener('click', (ev) => {
   }
 
   function attachCursorListeners() {
-    // Only attach if cursor is active to prevent touch firing
-    if (!isCursorActive) return;
+    if (!isCursorActive) return; // Don't attach if touch device
 
     const candidates = Array.from(document.querySelectorAll(interactiveSelectors))
       .filter((el) => !el.__cursorAttached && !shouldIgnore(el));
@@ -499,16 +486,11 @@ document.addEventListener('click', (ev) => {
     candidates.forEach((el) => {
       el.__cursorAttached = true;
       el.addEventListener('mouseenter', () => {
-          if(isCursorActive) {
-            lockedItem = el;
-            ring.classList.add('is-locked');
-          }
+        if (isCursorActive) { lockedItem = el; ring.classList.add('is-locked'); }
       });
       el.addEventListener('mouseleave', () => {
         if (isCursorActive && lockedItem === el) {
-          lockedItem = null;
-          ring.classList.remove('is-locked');
-          isUnlocking = true;
+          lockedItem = null; ring.classList.remove('is-locked'); isUnlocking = true;
           el.style.transform = '';
           el.style.transition = 'transform 0.3s ease';
           setTimeout(() => { isUnlocking = false; }, 200);
@@ -517,74 +499,55 @@ document.addEventListener('click', (ev) => {
     });
   }
 
-  // Observer for new elements
   if ('MutationObserver' in window) {
-    const mo = new MutationObserver(() => {
-        if(isCursorActive) setTimeout(attachCursorListeners, 50);
-    });
+    const mo = new MutationObserver(() => { if (isCursorActive) setTimeout(attachCursorListeners, 50); });
     mo.observe(document.body, { childList: true, subtree: true });
   }
 
-  // 6. ANIMATION LOOP
+  // 5. Animation Loop
   function loop() {
-    // Stop loop if disabled
-    if (!isCursorActive) return;
-
+    if (!isCursorActive) return; // Stop loop if disabled
     if (!hasMoved) { requestAnimationFrame(loop); return; }
 
-    let targetX = mouseX;
-    let targetY = mouseY;
-    let targetWidth = 40;
-    let targetHeight = 40;
+    let targetX = mouseX, targetY = mouseY;
+    let targetWidth = 40, targetHeight = 40;
     let targetRadius = '50%';
-    let scaleX = 1;
-    let scaleY = 1;
-    let rotation = 0;
-
+    let scaleX = 1, scaleY = 1, rotation = 0;
     const RING_LERP = lockedItem ? 0.2 : 0.15;
 
-    // --- LOCKED STATE ---
+    // Locked State
     if (lockedItem) {
       const rect = lockedItem.getBoundingClientRect();
       const style = window.getComputedStyle(lockedItem);
-
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      targetX = centerX;
-      targetY = centerY;
-      targetWidth = rect.width + 12;
-      targetHeight = rect.height + 12;
+      targetX = centerX; targetY = centerY;
+      targetWidth = rect.width + 12; targetHeight = rect.height + 12;
       targetRadius = style.borderRadius || '50%';
 
-      // Move Element (Magnetic)
+      // Magnet Physics
       if (lockedItem !== avatar) {
-        const moveX = mouseX - centerX;
-        const moveY = mouseY - centerY;
+        const moveX = mouseX - centerX, moveY = mouseY - centerY;
         lockedItem.style.transform = `translate(${moveX * 0.3}px, ${moveY * 0.3}px)`;
         lockedItem.style.transition = 'transform 0.1s linear';
       } else {
-         const moveX = mouseX - centerX;
-         const moveY = mouseY - centerY;
-         if (Math.hypot(moveX, moveY) < Math.max(160, rect.width * 0.6)) {
-           avatar.style.transform = `translate(${moveX * 0.25}px, ${moveY * 0.25}px)`;
-           avatar.style.transition = 'transform 0.12s linear';
-         } else {
-           avatar.style.transform = '';
-         }
+        const moveX = mouseX - centerX, moveY = mouseY - centerY;
+        if (Math.hypot(moveX, moveY) < Math.max(160, rect.width * 0.6)) {
+          avatar.style.transform = `translate(${moveX * 0.25}px, ${moveY * 0.25}px)`;
+          avatar.style.transition = 'transform 0.12s linear';
+        } else {
+          avatar.style.transform = '';
+        }
       }
-
       scaleX = 1; scaleY = 1; rotation = 0;
-
     } else {
-      // --- UNLOCKED STATE ---
+      // Unlocked State
       if (!isUnlocking) {
-        const deltaX = mouseX - ringX;
-        const deltaY = mouseY - ringY;
+        const deltaX = mouseX - ringX, deltaY = mouseY - ringY;
         const dist = Math.sqrt(deltaX ** 2 + deltaY ** 2);
         const stretch = Math.min(dist * 0.004, 0.3);
-        scaleX = 1 + stretch;
-        scaleY = 1 - stretch * 0.5;
+        scaleX = 1 + stretch; scaleY = 1 - stretch * 0.5;
         if (dist > 1) rotation = Math.atan2(deltaY, deltaX);
       }
     }
@@ -600,10 +563,9 @@ document.addEventListener('click', (ev) => {
     requestAnimationFrame(loop);
   }
 
-  // 7. INITIAL CHECK
-  // Initialize based on current state
-  if (mouseQuery.matches) {
-      startCursor();
+  // 6. INITIALIZE
+  if (capabilityQuery.matches) {
+    startCursor();
   }
 })();
 
