@@ -391,6 +391,15 @@ body {
     text-align: center;
     padding: var(--space-12);
   }
+
+  /* --- NEW CODE START: Forces the active color in mobile view --- */
+  .navbar__menu a.is-active {
+    background-color: hsla(var(--p-h), var(--p-s), 50%, 0.12) !important;
+    color: var(--color-btn-bg) !important;
+    font-weight: var(--font-weight-bold);
+  }
+  /* --- NEW CODE END --- */
+
   .project-card {
     grid-template-columns: 1fr;
     gap: var(--space-24);
