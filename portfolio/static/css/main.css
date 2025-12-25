@@ -386,17 +386,10 @@ body {
     pointer-events: auto;
     transform: translateX(-50%) translateY(0);
   }
-
   .navbar__menu a {
     width: 100%;
     text-align: center;
     padding: var(--space-12);
-    border-radius: var(--radius-sm);
-  }
-  .navbar__menu a.is-active {
-    background-color: hsla(var(--p-h), var(--p-s), 50%, 0.12) !important;
-    color: var(--color-btn-bg) !important;
-    font-weight: var(--font-weight-bold);
   }
   .project-card {
     grid-template-columns: 1fr;
