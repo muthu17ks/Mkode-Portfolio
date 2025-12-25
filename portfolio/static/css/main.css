@@ -345,4 +345,19 @@ body {
   .media-inner {
     max-width: 100%;
   }
+
+  /* --- CONTACT SECTION FIX --- */
+  .contact-layout {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-48);
+  }
+
+  .contact-info {
+    max-width: 100%;
+  }
+
+  /* .form-row {
+    grid-template-columns: 1fr;
+  }
+  */
 }
