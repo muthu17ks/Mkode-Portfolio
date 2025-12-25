@@ -1,0 +1,130 @@
+[
+  {
+    "id": "personal-portfolio",
+    "role": "Full-Stack Developer",
+    "timeline": "3 Weeks",
+    "client": "Personal Brand",
+    "overview": "A dynamic, data-driven portfolio designed to distinguish a fresher from the crowd. Unlike static templates, this site uses a JSON-based content architecture to serve as a centralized CMS for my projects.",
+    "problem": "Most student portfolios are static HTML files that are hard to maintain and lack interactivity. I needed a platform that demonstrated my ability to handle data, manage state, and build polished UIs without relying on heavy frameworks like React.",
+    "solution": "I architected a Flask (Python) application that separates data from presentation. The frontend uses Jinja2 templating with a glassmorphism design system, while the backend handles routing and SMTP email dispatching.",
+    "features": [
+      "JSON-driven content management (No database required)",
+      "Dark/Light mode with local storage persistence",
+      "AJAX Contact form with rate limiting and validation",
+      "Responsive Glassmorphism UI using CSS Grid"
+    ],
+    "challenges": [
+      { "title": "Responsive Grid", "desc": "Designing a CSS Grid system that handles mixed aspect ratios seamlessly across devices." },
+      { "title": "Theme State", "desc": "Using local storage to persist Dark/Light mode preference without visual glitches." }
+    ]
+  },
+  {
+    "id": "familyconnect",
+    "role": "Backend Engineer",
+    "timeline": "2 Months",
+    "client": "M.Sc. Final Project",
+    "overview": "FamilyConnect is a private social networking prototype built to simulate the core architecture of platforms like Facebook, but optimized for close-knit family groups.",
+    "problem": "Public social networks sell user data and lack privacy. Families needed a secure, isolated platform to share memories without algorithmic interference.",
+    "solution": "I developed a monolithic Flask application with a normalized MySQL schema. The system uses session-based authentication, Role-Based Access Control (RBAC), and server-side image processing to ensure speed and security.",
+    "features": [
+      "Secure User Authentication (BCrypt hashing)",
+      "Feed System: Create, Read, Update, Delete (CRUD) posts",
+      "Comment nesting and threading architecture",
+      "Image compression using Pillow (PIL) library"
+    ],
+    "challenges": [
+      { "title": "Database Normalization", "desc": "Designing a schema that efficiently links Users, Posts, and Comments while maintaining integrity." },
+      { "title": "Image Optimization", "desc": "Implementing Pillow (PIL) to compress images on the server before saving to disk." }
+    ]
+  },
+  {
+    "id": "workplace",
+    "role": "Full-Stack Developer",
+    "timeline": "1 Month",
+    "client": "M.Sc. Mini Project",
+    "overview": "A collaborative task management hub designed for academic teams. Workplace helps students track project progress, share documents, and manage deadlines in one dashboard.",
+    "problem": "Student group projects often fail due to fragmented communication across WhatsApp, Email, and Drive. We needed a single 'Source of Truth'.",
+    "solution": "I built a role-aware system (Admin vs Member) using Flask. The app features a Kanban-style task tracker, a central document repository, and real-time status updates.",
+    "features": [
+      "Kanban Board for task tracking (To-Do, Doing, Done)",
+      "File Upload/Download system for documentation",
+      "Team Member management and invite system",
+      "Deadline tracking with visual indicators"
+    ],
+    "challenges": [
+      { "title": "Role-Based Access", "desc": "Writing custom Python decorators to restrict sensitive routes to Team Leads only." }
+    ]
+  },
+  {
+    "id": "tic-tac-toe-game",
+    "role": "Python Developer",
+    "timeline": "1 Week",
+    "client": "Algorithm Study",
+    "overview": "A high-performance implementation of Tic Tac Toe featuring a custom-built AI opponent using heuristic algorithms, rendered with Python's Turtle graphics engine.",
+    "problem": "I wanted to understand the math behind game states and how computers 'think' in zero-sum games, rather than just building a simple CLI tool.",
+    "solution": "I wrote a custom rendering loop using Python Turtle. The core highlight is the AI opponent which checks 8 winning conditions and blocks player moves dynamically.",
+    "features": [
+      "Custom Graphic Interface (GUI) using Turtle",
+      "Smart AI that blocks player wins",
+      "Score tracking and game reset functionality",
+      "Smooth 60FPS rendering loop"
+    ],
+    "challenges": [
+      { "title": "Game State Logic", "desc": "Writing the algorithm to efficiently check all 8 winning conditions after every single move." }
+    ]
+  },
+  {
+    "id": "departmental-website",
+    "role": "Web Developer",
+    "timeline": "3 Months",
+    "client": "B.Sc. Final Year",
+    "overview": "A comprehensive digital portal for the Computer Science department, digitizing the traditional notice board and providing a CMS for faculty members.",
+    "problem": "Critical information about exams, schedules, and seminars was often missed because it was only posted on a physical wooden board.",
+    "solution": "I developed a multi-page responsive website with a custom CMS. Faculty can log in to upload PDF notices, while students get a mobile-friendly news feed.",
+    "features": [
+      "Admin Panel for uploading News & Events",
+      "PDF Viewer integration for exam schedules",
+      "Faculty directory and syllabus repository",
+      "Mobile-first responsive design"
+    ],
+    "challenges": [
+      { "title": "Legacy Support", "desc": "Ensuring the site functioned correctly on older university lab computers using progressive enhancement." }
+    ]
+  },
+  {
+    "id": "watermark-studio",
+    "role": "Python Tooling",
+    "timeline": "2 Weeks",
+    "client": "Utility Tool",
+    "overview": "A desktop automation tool built to batch-process images, applying transparent watermarks to hundreds of photos in seconds.",
+    "problem": "Photographers and content creators waste hours manually watermarking images. Online tools often reduce quality or add their own branding.",
+    "solution": "I built a native GUI application using Python (Tkinter) and Pillow. It performs pixel-perfect alpha compositing to blend watermarks without quality loss.",
+    "features": [
+      "Batch processing (50+ images at once)",
+      "Adjustable opacity and position controls",
+      "Support for PNG, JPG, and WEBP formats",
+      "Drag-and-drop file interface"
+    ],
+    "challenges": [
+      { "title": "Alpha Compositing", "desc": "Calculating the correct RGBA values to blend the watermark transparency with the base image." }
+    ]
+  },
+  {
+    "id": "snake-game",
+    "role": "Python Developer",
+    "timeline": "1 Week",
+    "client": "Game Logic Study",
+    "overview": "A classic arcade recreation that serves as a study in event loops, coordinate systems, and collision detection algorithms.",
+    "problem": "Understanding how software handles real-time user input and updates the screen state 60 times a second without lagging.",
+    "solution": "I implemented the game engine using Python with a queue-based system for the snake's body segments and a grid-based collision checker.",
+    "features": [
+      "Real-time keyboard event handling",
+      "Dynamic difficulty (speed increases with score)",
+      "High score persistence",
+      "Retro-style 8-bit sound effects"
+    ],
+    "challenges": [
+      { "title": "Coordinate Management", "desc": "Manipulating a dynamic array of (x, y) coordinates to simulate movement." }
+    ]
+  }
+]

@@ -9,14 +9,19 @@
 {% block content %}
 
   {#
-     Reusing 'projects-section' class to get the background color
-     and 'section-wrapper' for standard spacing.
-     Added inline padding-top to clear the fixed navbar.
+     Added class 'all-projects-view' to handle padding/min-height via CSS
+     instead of inline styles.
   #}
-  <section class="section-wrapper projects-section" style="padding-top: calc(var(--nav-height) + 40px); min-height: 100vh;">
+  <section class="section-wrapper projects-section all-projects-view">
     <div class="container">
 
-      {# Header using the same design as index #}
+      {# --- Back Button (Top) --- #}
+      <div class="projects-header-nav">
+        <a href="{{ url_for('portfolio.home') }}#projects" class="link-archive back-link">
+          <i data-lucide="arrow-left"></i> Back to Home
+        </a>
+      </div>
+
       <div class="section-header">
         <h1 class="section-title">All Projects</h1>
         <p class="section-subtitle">
@@ -26,7 +31,7 @@
 
       <div class="projects-stack">
         {% for p in projects %}
-          {# Define variables with safe defaults to prevent errors #}
+          {# Safe Defaults #}
           {% set pid = (p.id | default('proj-' ~ loop.index)) %}
           {% set title = p.title | default('Untitled Project') %}
           {% set desc = p.desc | default('Project description coming soon.') %}
@@ -41,11 +46,14 @@
 
             {# Left Column: Media #}
             <div class="project-card__media">
-              <a href="{{ live or code or '#' }}"
-                 target="{{ (live or code) and '_blank' or '_self' }}"
+              {#
+                 Link points to internal Detail Page.
+                 Added 'from=archive' so the Back button knows to return here.
+              #}
+              <a href="{{ url_for('portfolio.project_detail', project_id=p.id, from='archive') }}"
                  class="media-inner"
-                 rel="noopener"
-                 data-cursor-ignore> {% if tagline %}
+                 data-cursor-ignore>
+                {% if tagline %}
                 <div class="media-hook">
                   <span>{{ tagline }}</span>
                   <i data-lucide="arrow-up-right" class="hook-arrow" aria-hidden="true"></i>
@@ -83,6 +91,7 @@
                 {% endfor %}
               </div>
 
+              {# Buttons reverted to Original Style (btn-main) and External Links #}
               <div class="project-actions">
                 {% if live %}
                 <a href="{{ live }}" target="_blank" rel="noopener" class="btn-main" aria-label="Live Demo">
@@ -104,12 +113,6 @@
         {% endfor %}
       </div>
 
-      <div class="section-footer">
-        <a href="{{ url_for('portfolio.home') }}" class="link-archive">
-          &larr; Back to Home
-        </a>
-      </div>
-
     </div>
   </section>
 
@@ -118,7 +121,6 @@
 {% block scripts %}
   {{ super() }}
   <script>
-    // Ensure icons render if this page is loaded directly via AJAX or standard load
     if (typeof lucide !== 'undefined' && lucide.createIcons) {
       lucide.createIcons();
     }

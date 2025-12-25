@@ -129,7 +129,12 @@
         <article class="project-card" id="project-{{ p.id | replace(' ', '-') | lower }}">
 
           <div class="project-card__media">
-            <a href="{{ p.live_url or p.code_url or url_for('portfolio.all_projects') }}" target="_blank" class="media-inner" rel="noopener">
+            {#
+               1. Link points to internal project_detail (as requested originally).
+               2. Includes ?from=home for the back button logic.
+               3. No target="_blank" so it opens in the same tab.
+            #}
+            <a href="{{ url_for('portfolio.project_detail', project_id=p.id, from='home') }}" class="media-inner" rel="noopener">
               {% if p.tagline %}
               <div class="media-hook">
                 <span>{{ p.tagline }}</span>
@@ -162,6 +167,7 @@
               {% endfor %}
             </div>
 
+            {# Buttons reverted to Original Style (btn-main) and External Links #}
             <div class="project-actions">
               {% if p.live_url %}
               <a href="{{ p.live_url }}" target="_blank" rel="noopener" class="btn-main" aria-label="Live Demo">

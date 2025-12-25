@@ -7,9 +7,9 @@
     "image": "/portfolio/static/images/project-portfolio-thumb.png",
     "image_side": "left",
     "highlights": [
-      "Data-Driven Architecture: Content managed via JSON files, separating data from logic",
-      "AJAX Contact System: Asynchronous form submission with custom toast alerts",
-      "Modern UX: Responsive glassmorphism design with liquid cursor interactions"
+      "Data-Driven Architecture",
+      "AJAX Contact System",
+      "Glassmorphism UI"
     ],
     "tags": ["Flask", "Python", "JavaScript", "HTML5/CSS3", "JSON"],
     "live_url": "#",
@@ -20,16 +20,16 @@
   {
     "id": "familyconnect",
     "title": "FamilyConnect",
-    "tagline": "M.Sc. final project — a lightweight social / messaging prototype",
-    "desc": "FamilyConnect is a prototype social/messaging platform for families to share updates, photos, and short messages in a private feed. Focused on simple posting UX, basic media handling and privacy controls.",
+    "tagline": "M.Sc. Final Project — Private social messaging prototype",
+    "desc": "A private social feed for families with secure auth and image optimization.",
     "image": "/portfolio/static/images/project-family-connect-thumb.png",
     "image_side": "right",
     "highlights": [
-      "Private, family-oriented feed with image attachments",
-      "Simple moderation and user profile management",
-      "Server-side image handling and responsive UI"
+      "Secure Auth System",
+      "Server-side Image Compression",
+      "Normalized MySQL Schema"
     ],
-    "tags": ["Flask", "Python", "MySQL", "File Uploads", "HTML/CSS"],
+    "tags": ["Flask", "Python", "MySQL", "Pillow", "Security"],
     "live_url": "",
     "code_url": "https://github.com/muthu17ks/FamilyConnect",
     "date": "2025",
@@ -38,52 +38,88 @@
   {
     "id": "workplace",
     "title": "Workplace",
-    "tagline": "M.Sc. mini project — small team workflow & resource hub",
-    "desc": "Workplace is a compact app to manage tasks, docs and internal announcements for academic project teams. Lightweight, role-aware and built for easy hosting.",
+    "tagline": "M.Sc. Mini Project — Academic team workflow hub",
+    "desc": "A centralized dashboard for student teams to manage tasks and documents.",
     "image": "/portfolio/static/images/project-workspace-thumb.png",
     "image_side": "right",
     "highlights": [
-      "Task and document management tailored for academic teams",
-      "Role-based access to protect project resources",
-      "Simple, performant backend suitable for shared hosting"
+      "Role-Based Access Control",
+      "Kanban-style Tracker",
+      "Document Repository"
     ],
-    "tags": ["Flask", "Python", "Bootstrap", "MySQL", "JavaScript"],
+    "tags": ["Flask", "Python", "Bootstrap", "MySQL", "RBAC"],
     "live_url": "",
     "code_url": "https://github.com/muthu17ks/workplace",
     "date": "2024",
     "featured": true
   },
   {
+    "id": "tic-tac-toe-game",
+    "title": "Tic Tac Toe AI",
+    "tagline": "Python graphics project with custom AI engine",
+    "desc": "A graphical game built from scratch using Python Turtle with a custom AI.",
+    "image": "/portfolio/static/images/project-tictactoe-thumb.png",
+    "image_side": "right",
+    "highlights": [
+      "Custom Rendering Loop",
+      "Heuristic AI Opponent",
+      "Persistent High-Scores"
+    ],
+    "tags": ["Python", "Turtle Graphics", "Game AI", "Algorithms"],
+    "live_url": "",
+    "code_url": "https://github.com/muthu17ks/Tic-Tac-Toe-Game",
+    "date": "2024",
+    "featured": true
+  },
+  {
     "id": "departmental-website",
-    "title": "Departmental Website",
-    "tagline": "B.Sc. final-year project — a polished departmental portal",
-    "desc": "A responsive departmental portal for faculty, students and events. CMS-style admin features for announcements, resources and event publishing with accessible markup.",
+    "title": "Departmental Portal",
+    "tagline": "B.Sc. Final Project — Digital notice board & CMS",
+    "desc": "A digital portal for university faculty and students with a custom CMS.",
     "image": "",
     "image_side": "right",
     "highlights": [
-      "Responsive multi-page site with faculty, events and resources sections",
-      "Admin interface for announcements and event publishing",
-      "Accessible markup and mobile-first styling for wide device support"
+      "Custom CMS for Faculty",
+      "Mobile-First Design",
+      "Secure Admin Panel"
     ],
-    "tags": ["HTML", "CSS", "JavaScript", "Flask", "MySQL"],
+    "tags": ["HTML", "CSS", "JavaScript", "PHP/MySQL"],
     "live_url": "",
     "code_url": "https://github.com/muthu17ks/Departmental-Website",
     "date": "2023",
-    "featured": true
+    "featured": false
+  },
+  {
+    "id": "watermark-studio",
+    "title": "Watermark Studio",
+    "tagline": "Python utility for batch image processing",
+    "desc": "A desktop tool that applies transparent watermarks to images in bulk.",
+    "image": "",
+    "image_side": "right",
+    "highlights": [
+      "Batch Image Processing",
+      "Pixel-perfect Alpha Compositing",
+      "Clean Tkinter GUI"
+    ],
+    "tags": ["Python", "Tkinter", "Pillow", "Image Processing"],
+    "live_url": "",
+    "code_url": "https://github.com/muthu17ks/Watermark-Studio",
+    "date": "2023",
+    "featured": false
   },
   {
     "id": "snake-game",
     "title": "Snake Game",
-    "tagline": "Python micro-project — classic arcade recreation",
-    "desc": "A compact Snake game implemented in Python demonstrating event loop, collision detection and scoring — good small project for interactive programming.",
+    "tagline": "Classic arcade recreation in Python",
+    "desc": "A study in game loop architecture and collision detection algorithms.",
     "image": "/portfolio/static/images/project-snake-game-thumb.png",
     "image_side": "right",
     "highlights": [
-      "Classic snake mechanics: growth, collision, scoring",
-      "Keyboard controls and smooth game loop",
-      "Great introduction to Python game development"
+      "Custom Collision Detection",
+      "Queue-based Logic",
+      "Real-time Event Loop"
     ],
-    "tags": ["Python", "Pygame", "GameDev"],
+    "tags": ["Python", "Pygame", "Game Dev", "Geometry"],
     "live_url": "",
     "code_url": "https://github.com/muthu17ks/Snake-Game",
     "date": "2023",

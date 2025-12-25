@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.title }} | Case Study{% endblock %}
+
+{% block navbar %}
+  {% include 'navbar.html' %}
+{% endblock %}
+
+{% block content %}
+
+  <article class="project-page">
+    <div class="container">
+
+      {# --- 1. Header Section --- #}
+      <header class="project-header-section">
+        {# Back Button #}
+        <div class="project-back-wrapper">
+          <a href="{{ back_url }}" class="link-archive icon-link">
+            <i data-lucide="arrow-left"></i> {{ back_text }}
+          </a>
+        </div>
+
+        {# Title & Tagline #}
+        <h1 class="project-title-main">{{ project.title }}</h1>
+        <p class="project-tagline">{{ project.tagline }}</p>
+
+        {# Stats Grid #}
+        <div class="project-meta-row">
+          <div class="meta-pill-item">
+            <span class="label">Role</span>
+            <span class="value">{{ project.role }}</span>
+          </div>
+          <div class="meta-pill-item">
+            <span class="label">Timeline</span>
+            <span class="value">{{ project.timeline }}</span>
+          </div>
+          <div class="meta-pill-item">
+            <span class="label">Context</span>
+            <span class="value">{{ project.client }}</span>
+          </div>
+        </div>
+      </header>
+
+      {# --- 2. Hero Image (Full Width, No Crop) --- #}
+      {% if project.image %}
+      <div class="project-showcase-image">
+        <img src="{{ project.image }}" alt="{{ project.title }} Interface Design" loading="eager">
+      </div>
+      {% endif %}
+
+      {# --- 3. Content Grid (Story + Sticky Sidebar) --- #}
+      <div class="project-content-grid">
+
+        {# LEFT: The Story #}
+        <div class="content-left">
+
+          <div class="text-block">
+            <h3>Overview</h3>
+            <p>{{ project.overview }}</p>
+          </div>
+
+          <div class="text-block">
+            <h3>The Challenge</h3>
+            <p>{{ project.problem }}</p>
+          </div>
+
+          <div class="text-block">
+            <h3>The Solution</h3>
+            <p>{{ project.solution }}</p>
+
+            {% if project.features %}
+            <ul class="feature-checklist">
+              {% for f in project.features %}
+                <li><i data-lucide="check"></i> {{ f }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+
+          {% if project.challenges %}
+          <div class="text-block">
+            <h3>Key Technical Challenges</h3>
+            <div class="challenges-list">
+              {% for c in project.challenges %}
+              <div class="challenge-item">
+                <strong>{{ c.title }}</strong>
+                <span>{{ c.desc }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+
+        {# RIGHT: Sticky Sidebar #}
+        <aside class="content-right">
+          <div class="sticky-panel">
+
+            <div class="action-buttons">
+              {# Primary: Live Demo #}
+              {% if project.live_url %}
+              <a href="{{ project.live_url }}" target="_blank" rel="noopener" class="btn-main full-width-btn">
+                <i data-lucide="external-link"></i> Live Demo
+              </a>
+              {% endif %}
+
+              {# Secondary: Code (Using the new outline style) #}
+              {% if project.code_url %}
+              <a href="{{ project.code_url }}" target="_blank" rel="noopener noreferrer" class="btn-secondary full-width-btn">
+                <i data-lucide="github"></i> View Code
+              </a>
+              {% endif %}
+            </div>
+
+            <div class="tech-sidebar-block">
+              <h4>Technologies</h4>
+              <div class="project-tags">
+                {% for t in project.tags %}
+                <span class="tech-badge">{{ t }}</span>
+                {% endfor %}
+              </div>
+            </div>
+
+          </div>
+        </aside>
+
+      </div>
+
+    </div>
+  </article>
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+      lucide.createIcons();
+    }
+  </script>
+{% endblock %}

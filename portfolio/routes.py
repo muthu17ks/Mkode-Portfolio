@@ -6,6 +6,7 @@ Handles all URL routing for the portfolio, including:
 - Project listing
 - Resume downloads
 - Contact form submissions via SMTP
+- Project detail views
 """
 
 import os
@@ -19,6 +20,7 @@ from flask import (
     current_app,
     abort,
     jsonify,
+    url_for,
 )
 from flask_mail import Message
 from . import portfolio_bp
@@ -27,6 +29,7 @@ from . import portfolio_bp
 DATA_DIR = Path(__file__).parent / "data"
 PROJECTS_JSON = DATA_DIR / "projects.json"
 SITE_DATA_JSON = DATA_DIR / "site_data.json"
+PROJECT_DETAILS_JSON = DATA_DIR / "project_details.json"
 
 
 def load_json_data(path, default=None):
@@ -44,6 +47,24 @@ def load_json_data(path, default=None):
     except Exception:
         current_app.logger.exception(f"Failed to load {path.name}")
         return default
+
+
+def get_merged_project_data(project_id):
+    """
+    Fetches basic metadata from projects.json and detailed content
+    from project_details.json, merging them into one object.
+    """
+    all_projects = load_json_data(PROJECTS_JSON, default=[])
+    all_details = load_json_data(PROJECT_DETAILS_JSON, default=[])
+
+    project_meta = next((p for p in all_projects if p["id"] == project_id), None)
+
+    if not project_meta:
+        return None
+
+    project_detail = next((d for d in all_details if d["id"] == project_id), {})
+
+    return {**project_meta, **project_detail}
 
 
 @portfolio_bp.route("/", methods=["GET"])
@@ -86,6 +107,37 @@ def all_projects():
     """Renders the full list of projects."""
     projects = load_json_data(PROJECTS_JSON, default=[])
     return render_template("projects.html", projects=projects)
+
+
+@portfolio_bp.route("/project/<project_id>", methods=["GET"])
+def project_detail(project_id):
+    """
+    Renders the dedicated project detail page.
+    Handles 'pipelined' navigation via the ?from= query parameter.
+    """
+    project = get_merged_project_data(project_id)
+
+    if not project:
+        abort(404)
+
+    referrer = request.args.get("from")
+
+    if referrer == "home":
+        back_url = url_for("portfolio.home") + "#projects"
+        back_text = "Back to Home"
+    elif referrer == "archive":
+        back_url = url_for("portfolio.all_projects")
+        back_text = "Back to All Projects"
+    else:
+        back_url = url_for("portfolio.all_projects")
+        back_text = "Back to Projects"
+
+    return render_template(
+        "project_detail.html",
+        project=project,
+        back_url=back_url,
+        back_text=back_text
+    )
 
 
 @portfolio_bp.route("/download-resume", methods=["GET"])
