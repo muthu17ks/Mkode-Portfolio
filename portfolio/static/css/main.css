@@ -336,3 +336,13 @@ body {
   .hero__avatar { width: clamp(300px, 45vw, 350px); margin-left: auto; }
   .hero__title { font-size: clamp(40px, 5vw, 56px); }
 }
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .project-card {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-32);
+  }
+  .media-inner {
+    max-width: 100%;
+  }
+}
