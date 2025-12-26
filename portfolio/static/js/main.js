@@ -13,13 +13,10 @@
   const grid = document.getElementById('palette-grid');
   const refreshBtn = document.getElementById('refresh-palettes');
 
-  // --- PREMIUM DEFAULT PALETTE ---
-  // Ideally, this should be Index 0.
-  // Deep Teal (Professional), Slate, Gold Accent, Light BG
   const DEFAULT_PALETTE = ['#0f4c75', '#3282b8', '#bbe1fa', '#1b262c'];
 
   const PALETTE_LIBRARY = [
-    DEFAULT_PALETTE, // Index 0 is always the default active one
+    DEFAULT_PALETTE,
     ['#1b3c53', '#234c6a', '#456882', '#e3e3e3'],
     ['#213448', '#547792', '#94b4c1', '#eae0cf'],
     ['#050e3c', '#002455', '#dc0000', '#ff3838'],
@@ -104,15 +101,12 @@
     });
 
     localStorage.setItem('custom-palette', JSON.stringify(colors));
-
-    // Update active state visually in the grid if open
     updateActiveGridState(colors);
   }
 
   function updateActiveGridState(activeColors) {
     const cards = document.querySelectorAll('.palette-card');
     cards.forEach(card => {
-        // Simple equality check by joining arrays to strings
         const cardColors = JSON.parse(card.getAttribute('data-colors'));
         if (JSON.stringify(cardColors) === JSON.stringify(activeColors)) {
             card.classList.add('is-active-palette');
@@ -130,10 +124,8 @@
     if (!grid) return;
     grid.innerHTML = '';
 
-    // Always include the current active/default one first
     const current = JSON.parse(localStorage.getItem('custom-palette')) || DEFAULT_PALETTE;
 
-    // Get 3 other random ones (filtering out the current one to avoid dups)
     const others = PALETTE_LIBRARY
         .filter(p => JSON.stringify(p) !== JSON.stringify(current))
         .sort(() => 0.5 - Math.random())
@@ -145,7 +137,7 @@
       const card = document.createElement('button');
       card.className = 'palette-card';
       card.setAttribute('aria-label', 'Select this color palette');
-      card.setAttribute('data-colors', JSON.stringify(colors)); // Store for easy check
+      card.setAttribute('data-colors', JSON.stringify(colors));
 
       const preview = document.createElement('div');
       preview.className = 'palette-preview';
@@ -158,7 +150,6 @@
 
       card.appendChild(preview);
 
-      // Check if this is the active one to style it immediately
       if (JSON.stringify(colors) === JSON.stringify(current)) {
           card.classList.add('is-active-palette');
       }
@@ -169,7 +160,6 @@
         } else {
              applyPalette(colors);
         }
-        // Don't close immediately so user sees the selection change
         setTimeout(() => modal.close(), 300);
       });
 
@@ -177,9 +167,7 @@
     });
   }
 
-  // --- INITIALIZATION ---
   const savedTheme = localStorage.getItem('theme') || 'light';
-  // Load saved palette OR default to premium one
   const savedPalette = JSON.parse(localStorage.getItem('custom-palette')) || DEFAULT_PALETTE;
 
   root.classList.add(savedTheme === 'dark' ? 'dark-theme' : 'light-theme');
@@ -399,20 +387,15 @@ document.addEventListener('click', (ev) => {
 
   if (!dot || !ring) return;
 
-  // State
   let mouseX = -100, mouseY = -100;
   let ringX = -100, ringY = -100;
-  let isCursorActive = false; // The master switch
+  let isCursorActive = false;
   let lockedItem = null;
   let hasMoved = false;
   let isUnlocking = false;
 
-  // --- THE OPTIMISTIC CHECK ---
-  // Matches CSS: (hover: hover) AND (pointer: fine)
-  // This detects "Mouse Capability", not "Screen Size".
   const capabilityQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
 
-  // 1. Handle Capability Changes (e.g. connecting a mouse to tablet)
   function handleCapabilityChange(e) {
     if (e.matches) {
       startCursor();
@@ -423,12 +406,10 @@ document.addEventListener('click', (ev) => {
 
   capabilityQuery.addEventListener('change', handleCapabilityChange);
 
-  // 2. Start/Stop Logic
   function startCursor() {
     if (isCursorActive) return;
     isCursorActive = true;
 
-    // Force CSS match (Just in case JS loads before CSS paints)
     dot.style.display = 'block';
     ring.style.display = 'block';
 
@@ -443,14 +424,12 @@ document.addEventListener('click', (ev) => {
     ring.style.display = 'none';
     window.removeEventListener('mousemove', onMouseMove);
 
-    // Clean up locked state
     if (lockedItem) {
       lockedItem.style.transform = '';
       lockedItem = null;
     }
   }
 
-  // 3. Mouse Movement
   function onMouseMove(e) {
     mouseX = e.clientX;
     mouseY = e.clientY;
@@ -461,15 +440,18 @@ document.addEventListener('click', (ev) => {
     dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
   }
 
-  // 4. Magnet Listeners
   const interactiveSelectors = [
     'a', 'button', '.btn-main', '.btn-hero-primary',
-    '.hero__avatar', '.tech-item', '[role="button"]', '.tech-badge'
+    '.hero__avatar', '.tech-item', '[role="button"]', '.tech-badge',
+    '.action-badge'
   ].join(',');
 
   function shouldIgnore(el) {
     if (!el) return true;
     if (el.hasAttribute('data-cursor-ignore')) return true;
+
+    if (el.classList.contains('action-badge')) return false;
+
     if (el.closest('.project-card__media')) return true;
     if (el.closest('.contact-form-wrapper')) {
       if (el.matches('input, textarea, select, label')) return true;
@@ -478,7 +460,7 @@ document.addEventListener('click', (ev) => {
   }
 
   function attachCursorListeners() {
-    if (!isCursorActive) return; // Don't attach if touch device
+    if (!isCursorActive) return;
 
     const candidates = Array.from(document.querySelectorAll(interactiveSelectors))
       .filter((el) => !el.__cursorAttached && !shouldIgnore(el));
@@ -504,9 +486,8 @@ document.addEventListener('click', (ev) => {
     mo.observe(document.body, { childList: true, subtree: true });
   }
 
-  // 5. Animation Loop
   function loop() {
-    if (!isCursorActive) return; // Stop loop if disabled
+    if (!isCursorActive) return;
     if (!hasMoved) { requestAnimationFrame(loop); return; }
 
     let targetX = mouseX, targetY = mouseY;
@@ -515,7 +496,6 @@ document.addEventListener('click', (ev) => {
     let scaleX = 1, scaleY = 1, rotation = 0;
     const RING_LERP = lockedItem ? 0.2 : 0.15;
 
-    // Locked State
     if (lockedItem) {
       const rect = lockedItem.getBoundingClientRect();
       const style = window.getComputedStyle(lockedItem);
@@ -526,7 +506,6 @@ document.addEventListener('click', (ev) => {
       targetWidth = rect.width + 12; targetHeight = rect.height + 12;
       targetRadius = style.borderRadius || '50%';
 
-      // Magnet Physics
       if (lockedItem !== avatar) {
         const moveX = mouseX - centerX, moveY = mouseY - centerY;
         lockedItem.style.transform = `translate(${moveX * 0.3}px, ${moveY * 0.3}px)`;
@@ -542,7 +521,6 @@ document.addEventListener('click', (ev) => {
       }
       scaleX = 1; scaleY = 1; rotation = 0;
     } else {
-      // Unlocked State
       if (!isUnlocking) {
         const deltaX = mouseX - ringX, deltaY = mouseY - ringY;
         const dist = Math.sqrt(deltaX ** 2 + deltaY ** 2);
@@ -563,7 +541,6 @@ document.addEventListener('click', (ev) => {
     requestAnimationFrame(loop);
   }
 
-  // 6. INITIALIZE
   if (capabilityQuery.matches) {
     startCursor();
   }
@@ -574,7 +551,6 @@ document.addEventListener('click', (ev) => {
   const form = document.querySelector('.contact-form');
   if (!form) return;
   const submitBtn = form.querySelector('button[type="submit"]');
-  // Store original content to restore it later
   const originalBtnContent = submitBtn.innerHTML;
 
   function showToast(message, type = 'info') {
@@ -584,7 +560,6 @@ document.addEventListener('click', (ev) => {
     const toast = document.createElement('div');
     toast.className = `toast toast--${type}`;
 
-    // Icons
     let iconName = 'info';
     if (type === 'success') iconName = 'check-circle';
     if (type === 'error') iconName = 'alert-circle';
@@ -596,17 +571,13 @@ document.addEventListener('click', (ev) => {
       <button class="toast__close" aria-label="Close" type="button" data-cursor-ignore><i data-lucide="x"></i></button>
     `;
 
-    // Append to container (Fixed position, so no layout shift)
     container.appendChild(toast);
 
-    // Refresh icons
     if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
 
-    // Auto remove logic
     const removeToast = () => {
       toast.classList.add('is-hiding');
       toast.addEventListener('transitionend', () => toast.remove());
-      // Fallback in case transitionend doesn't fire
       setTimeout(() => { if(toast.parentElement) toast.remove(); }, 400);
     };
 
@@ -620,11 +591,10 @@ document.addEventListener('click', (ev) => {
   }
 
   form.addEventListener('submit', async (e) => {
-    e.preventDefault(); // STOP PAGE RELOAD
+    e.preventDefault();
 
-    // Disable button to prevent double-click glitches
     submitBtn.disabled = true;
-    submitBtn.style.cursor = 'not-allowed'; // Visual feedback
+    submitBtn.style.cursor = 'not-allowed';
     submitBtn.innerHTML = `<i data-lucide="loader-2" class="spin-anim"></i> <span>Sending...</span>`;
 
     if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
@@ -652,7 +622,6 @@ document.addEventListener('click', (ev) => {
       if (loadingToast) loadingToast.remove();
       showToast('Network error. Please try again.', 'error');
     } finally {
-      // Restore button
       submitBtn.disabled = false;
       submitBtn.style.cursor = '';
       submitBtn.innerHTML = originalBtnContent;
