@@ -648,3 +648,218 @@ document.addEventListener('click', (ev) => {
 
   setTimeout(dismissPreloader, 5000);
 })();
+
+
+/* 8. PCB Circuit Line Generator & Scroll Spy */
+(function() {
+  const svg = document.querySelector('.toc-circuit-svg');
+  const trackPath = document.querySelector('.circuit-track');
+  const fillPath = document.querySelector('.circuit-fill');
+  const linksWrapper = document.querySelector('.toc-links-wrapper');
+  const links = Array.from(document.querySelectorAll('.toc-link'));
+  const sections = document.querySelectorAll('.scroll-spy-target');
+  const contentContainer = document.querySelector('.layout-content');
+
+  if (!svg || !links.length) return;
+
+  // Configuration
+  const LANE_LEFT = 1;
+  const LANE_RIGHT = 15;
+  const lanePattern = [0, 0, 1, 1, 0, 0, 1, 1];
+
+  let nodeLengths = [];
+
+  function drawCircuit() {
+    // 1. Ensure SVG matches container height perfectly
+    const wrapperHeight = linksWrapper.scrollHeight;
+    svg.style.height = `${wrapperHeight}px`;
+    svg.setAttribute('height', wrapperHeight);
+
+    const wrapperRect = linksWrapper.getBoundingClientRect();
+
+    // 2. Get Y positions relative to the wrapper
+    const linkYPositions = links.map(link => {
+      const rect = link.getBoundingClientRect();
+      // Calculate vertical center relative to wrapper top
+      return rect.top - wrapperRect.top + (rect.height / 2);
+    });
+
+    // 3. Build Path
+    let d = `M ${LANE_LEFT} 0`;
+
+    let prevX = LANE_LEFT;
+    let prevY = 0;
+    let accumulatedLength = 0;
+
+    nodeLengths = [];
+
+    linkYPositions.forEach((y, i) => {
+      const isRightLane = lanePattern[i % lanePattern.length] === 1;
+      const currentX = isRightLane ? LANE_RIGHT : LANE_LEFT;
+
+      // Indentation logic
+      if (isRightLane) links[i].classList.add('is-indented');
+      else links[i].classList.remove('is-indented');
+
+      // Calculate Midpoint for lane change
+      const midY = prevY + (y - prevY) * 0.5;
+
+      // Vertical Drop
+      d += ` L ${prevX} ${midY}`;
+      accumulatedLength += Math.sqrt(Math.pow(prevX - prevX, 2) + Math.pow(midY - prevY, 2));
+
+      // Diagonal Cut
+      d += ` L ${currentX} ${y}`;
+      accumulatedLength += Math.sqrt(Math.pow(currentX - prevX, 2) + Math.pow(y - midY, 2));
+
+      nodeLengths.push(accumulatedLength);
+
+      prevX = currentX;
+      prevY = y;
+    });
+
+    // Trail off at bottom
+    const trailY = Math.min(prevY + 25, wrapperHeight); // Don't exceed container
+    d += ` L ${prevX} ${trailY}`;
+
+    // Apply paths
+    trackPath.setAttribute('d', d);
+    fillPath.setAttribute('d', d);
+
+    // Force immediate update
+    updateScroll();
+  }
+
+  // --- Resize & Load Handling ---
+  if (window.ResizeObserver && contentContainer) {
+    const ro = new ResizeObserver(() => {
+      requestAnimationFrame(drawCircuit);
+    });
+    ro.observe(contentContainer);
+    ro.observe(linksWrapper);
+  } else {
+    window.addEventListener('resize', drawCircuit);
+    window.addEventListener('load', drawCircuit);
+  }
+
+  // Initial run
+  drawCircuit();
+
+  // --- Scroll Spy Logic ---
+  const observerOptions = {
+    root: null,
+    rootMargin: '-10% 0px -70% 0px',
+    threshold: 0
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        const index = links.findIndex(l => l.getAttribute('href') === `#${id}`);
+        if (index !== -1) setActive(index);
+      }
+    });
+  }, observerOptions);
+
+  sections.forEach(sec => observer.observe(sec));
+
+  function setActive(index) {
+    links.forEach((l, i) => {
+      if (i === index) l.classList.add('is-active');
+      else l.classList.remove('is-active');
+    });
+
+    if (nodeLengths[index] !== undefined) {
+      fillPath.style.strokeDasharray = `${nodeLengths[index] + 5} 10000`;
+    }
+  }
+
+  function updateScroll() {
+     if (window.scrollY < 100 && links.length > 0) setActive(0);
+  }
+
+})();
+
+/* 9. Image Carousel Logic */
+(function() {
+  const carousel = document.querySelector('.project-carousel');
+  if (!carousel) return;
+
+  const track = carousel.querySelector('.carousel-track');
+  const slides = Array.from(track.children);
+  const nextBtn = carousel.querySelector('.btn--right');
+  const prevBtn = carousel.querySelector('.btn--left');
+  const dotsNav = carousel.querySelector('.carousel-nav');
+  const dots = dotsNav ? Array.from(dotsNav.children) : [];
+
+  // Arrange slides next to each other?
+  // CSS handles opacity/absolute, so we just toggle class .current-slide
+
+  const updateSlide = (current, target) => {
+    current.classList.remove('current-slide');
+    target.classList.add('current-slide');
+  };
+
+  const updateDots = (targetIndex) => {
+    if(!dotsNav) return;
+    const currentDot = dotsNav.querySelector('.current-slide');
+    const targetDot = dots[targetIndex];
+    if(currentDot) currentDot.classList.remove('current-slide');
+    if(targetDot) targetDot.classList.add('current-slide');
+  };
+
+  const updateArrows = (targetIndex) => {
+    if (!prevBtn || !nextBtn) return;
+
+    if (targetIndex === 0) {
+      prevBtn.classList.add('is-hidden');
+      nextBtn.classList.remove('is-hidden');
+    } else if (targetIndex === slides.length - 1) {
+      prevBtn.classList.remove('is-hidden');
+      nextBtn.classList.add('is-hidden');
+    } else {
+      prevBtn.classList.remove('is-hidden');
+      nextBtn.classList.remove('is-hidden');
+    }
+  };
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      const currentSlide = track.querySelector('.current-slide');
+      const nextSlide = currentSlide.nextElementSibling;
+      const targetIndex = slides.findIndex(slide => slide === nextSlide);
+
+      updateSlide(currentSlide, nextSlide);
+      updateDots(targetIndex);
+      updateArrows(targetIndex);
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      const currentSlide = track.querySelector('.current-slide');
+      const prevSlide = currentSlide.previousElementSibling;
+      const targetIndex = slides.findIndex(slide => slide === prevSlide);
+
+      updateSlide(currentSlide, prevSlide);
+      updateDots(targetIndex);
+      updateArrows(targetIndex);
+    });
+  }
+
+  if (dotsNav) {
+    dotsNav.addEventListener('click', e => {
+      const targetDot = e.target.closest('button');
+      if (!targetDot) return;
+
+      const currentSlide = track.querySelector('.current-slide');
+      const targetIndex = dots.findIndex(dot => dot === targetDot);
+      const targetSlide = slides[targetIndex];
+
+      updateSlide(currentSlide, targetSlide);
+      updateDots(targetIndex);
+      updateArrows(targetIndex);
+    });
+  }
+})();

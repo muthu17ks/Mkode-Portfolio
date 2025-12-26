@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ project.title }} | Case Study{% endblock %}
+{% block title %}{{ project.title }} | Project Details{% endblock %}
 
 {% block navbar %}
   {% include 'navbar.html' %}
@@ -11,121 +11,201 @@
   <article class="project-page">
     <div class="container">
 
-      {# --- 1. Header Section --- #}
-      <header class="project-header-section">
-        {# Back Button #}
+      {# --- 1. Header --- #}
+      <header class="project-header">
         <div class="project-back-wrapper">
           <a href="{{ back_url }}" class="link-archive icon-link">
-            <i data-lucide="arrow-left"></i> {{ back_text }}
+            <i data-lucide="arrow-left"></i> <span>{{ back_text }}</span>
           </a>
         </div>
-
-        {# Title & Tagline #}
         <h1 class="project-title-main">{{ project.title }}</h1>
-        <p class="project-tagline">{{ project.tagline }}</p>
-
-        {# Stats Grid #}
-        <div class="project-meta-row">
-          <div class="meta-pill-item">
-            <span class="label">Role</span>
-            <span class="value">{{ project.role }}</span>
-          </div>
-          <div class="meta-pill-item">
-            <span class="label">Timeline</span>
-            <span class="value">{{ project.timeline }}</span>
-          </div>
-          <div class="meta-pill-item">
-            <span class="label">Context</span>
-            <span class="value">{{ project.client }}</span>
-          </div>
+        <div class="project-meta-date">
+          <i data-lucide="calendar"></i> Last Updated: {{ project.last_updated }}
         </div>
       </header>
 
-      {# --- 2. Hero Image (Full Width, No Crop) --- #}
-      {% if project.image %}
-      <div class="project-showcase-image">
-        <img src="{{ project.image }}" alt="{{ project.title }} Interface Design" loading="eager">
-      </div>
-      {% endif %}
+      {# --- 2. Main Layout Grid --- #}
+      <div class="project-layout-grid">
 
-      {# --- 3. Content Grid (Story + Sticky Sidebar) --- #}
-      <div class="project-content-grid">
+        {# --- LEFT COLUMN: Image, Meta Grid, Content --- #}
+        <div class="layout-content">
 
-        {# LEFT: The Story #}
-        <div class="content-left">
+          {# A. Carousel Banner #}
+          <div class="project-carousel reveal-up">
 
-          <div class="text-block">
-            <h3>Overview</h3>
-            <p>{{ project.overview }}</p>
-          </div>
+            {# 1. The Track #}
+            <div class="carousel-track-container">
+              <ul class="carousel-track">
+                {% if project.images and project.images|length > 0 %}
+                  {% for img in project.images %}
+                  <li class="carousel-slide {% if loop.first %}current-slide{% endif %}">
+                    <img src="{{ img }}" alt="{{ project.title }} Screenshot {{ loop.index }}">
+                  </li>
+                  {% endfor %}
+                {% else %}
+                  {# Fallback if no images #}
+                  <li class="carousel-slide current-slide">
+                    <div class="carousel-placeholder">No Preview Available</div>
+                  </li>
+                {% endif %}
+              </ul>
+            </div>
 
-          <div class="text-block">
-            <h3>The Challenge</h3>
-            <p>{{ project.problem }}</p>
-          </div>
+            {# 2. Controls (Only show if > 1 image) #}
+            {% if project.images and project.images|length > 1 %}
+            <button class="carousel-btn btn--left is-hidden">
+              <i data-lucide="chevron-left"></i>
+            </button>
+            <button class="carousel-btn btn--right">
+              <i data-lucide="chevron-right"></i>
+            </button>
 
-          <div class="text-block">
-            <h3>The Solution</h3>
-            <p>{{ project.solution }}</p>
-
-            {% if project.features %}
-            <ul class="feature-checklist">
-              {% for f in project.features %}
-                <li><i data-lucide="check"></i> {{ f }}</li>
+            {# 3. Dots Navigation #}
+            <div class="carousel-nav">
+              {% for img in project.images %}
+              <button class="carousel-indicator {% if loop.first %}current-slide{% endif %}" aria-label="Go to slide {{ loop.index }}"></button>
               {% endfor %}
-            </ul>
+            </div>
             {% endif %}
+
           </div>
 
-          {% if project.challenges %}
-          <div class="text-block">
-            <h3>Key Technical Challenges</h3>
-            <div class="challenges-list">
-              {% for c in project.challenges %}
-              <div class="challenge-item">
-                <strong>{{ c.title }}</strong>
-                <span>{{ c.desc }}</span>
-              </div>
-              {% endfor %}
-            </div>
-          </div>
-          {% endif %}
+          {# B. Meta Grid (Cards) #}
+          <div class="project-meta-grid">
 
-        </div>
-
-        {# RIGHT: Sticky Sidebar #}
-        <aside class="content-right">
-          <div class="sticky-panel">
-
-            <div class="action-buttons">
-              {# Primary: Live Demo #}
-              {% if project.live_url %}
-              <a href="{{ project.live_url }}" target="_blank" rel="noopener" class="btn-main full-width-btn">
-                <i data-lucide="external-link"></i> Live Demo
-              </a>
-              {% endif %}
-
-              {# Secondary: Code (Using the new outline style) #}
-              {% if project.code_url %}
-              <a href="{{ project.code_url }}" target="_blank" rel="noopener noreferrer" class="btn-secondary full-width-btn">
-                <i data-lucide="github"></i> View Code
-              </a>
-              {% endif %}
-            </div>
-
-            <div class="tech-sidebar-block">
-              <h4>Technologies</h4>
-              <div class="project-tags">
+            {# Card 1: Tech Stack #}
+            <div class="meta-card">
+              <h4 class="meta-label">Technologies</h4>
+              <div class="tech-stack-row">
                 {% for t in project.tags %}
-                <span class="tech-badge">{{ t }}</span>
+                <span class="tech-tag">{{ t }}</span>
                 {% endfor %}
               </div>
             </div>
 
+            {# Card 2: Buttons (With Title) #}
+            <div class="meta-card actions-card">
+              <h4 class="meta-label">Project Links</h4> {# <--- Title Added Here #}
+              <div class="meta-actions">
+                {% if project.live_url %}
+                <a href="{{ project.live_url }}" target="_blank" rel="noopener" class="btn-main full-width-btn">
+                  <i data-lucide="external-link"></i> Visit Live Website
+                </a>
+                {% endif %}
+
+                {% if project.code_url %}
+                <a href="{{ project.code_url }}" target="_blank" rel="noopener noreferrer" class="btn-secondary full-width-btn">
+                  <i data-lucide="github"></i> View Source Code
+                </a>
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+
+          {# C. Text Content #}
+          <div class="content-body">
+            <section id="overview" class="text-block scroll-spy-target">
+              <h3>Overview</h3>
+              <p>{{ project.overview }}</p>
+            </section>
+
+            <section id="problem" class="text-block scroll-spy-target">
+              <h3>The Problem</h3>
+              <p>{{ project.problem }}</p>
+            </section>
+
+            <section id="solution" class="text-block scroll-spy-target">
+              <h3>The Solution</h3>
+              <p>{{ project.solution }}</p>
+            </section>
+
+            {% if project.features %}
+            <section id="features" class="text-block scroll-spy-target">
+              <h3>Key Features</h3>
+              <ul class="feature-list-simple">
+                {% for f in project.features %}
+                <li><i data-lucide="check"></i> {{ f }}</li>
+                {% endfor %}
+              </ul>
+            </section>
+            {% endif %}
+
+            {% if project.challenges %}
+            <section id="challenges" class="text-block scroll-spy-target">
+              <h3>Technical Challenges</h3>
+              <div class="challenges-grid">
+                {% for c in project.challenges %}
+                <div class="challenge-card">
+                  <h4>{{ c.title }}</h4>
+                  <p>{{ c.desc }}</p>
+                </div>
+                {% endfor %}
+              </div>
+            </section>
+            {% endif %}
+          </div>
+        </div>
+
+        {# --- RIGHT COLUMN: TOC Sidebar --- #}
+        <aside class="layout-sidebar">
+          <div class="sticky-wrapper">
+            <div class="sidebar-module">
+              <h4 class="sidebar-label">On this page</h4>
+              <nav class="toc-nav">
+                <svg class="toc-circuit-svg" width="40" height="100%">
+                  <path class="circuit-track" d="" fill="none" stroke-width="2" />
+                  <path class="circuit-fill" d="" fill="none" stroke-width="2" />
+                </svg>
+
+                <div class="toc-links-wrapper">
+                  {# Added data-cursor-ignore to disable the ring effect #}
+                  <a href="#overview" class="toc-link" data-cursor-ignore>Overview</a>
+                  <a href="#problem" class="toc-link" data-cursor-ignore>The Problem</a>
+                  <a href="#solution" class="toc-link" data-cursor-ignore>The Solution</a>
+                  {% if project.features %}<a href="#features" class="toc-link" data-cursor-ignore>Key Features</a>{% endif %}
+                  {% if project.challenges %}<a href="#challenges" class="toc-link" data-cursor-ignore>Challenges</a>{% endif %}
+                </div>
+              </nav>
+            </div>
           </div>
         </aside>
 
       </div>
+
+      {# --- 4. Project Navigation (Previous / Next) --- #}
+          <nav class="project-navigation reveal-up">
+
+            {# Previous Project (Left Side) #}
+            {% if prev_project %}
+            <a href="{{ url_for('portfolio.project_detail', project_id=prev_project.id) }}" class="nav-card prev">
+              <div class="nav-icon">
+                <i data-lucide="arrow-left"></i>
+              </div>
+              <div class="nav-info">
+                <span class="nav-label">Previous Project</span>
+                <span class="nav-title">{{ prev_project.title }}</span>
+              </div>
+            </a>
+            {% else %}
+            {# Empty spacer to keep Next button on the right side if there is no previous #}
+            <div class="nav-spacer"></div>
+            {% endif %}
+
+            {# Next Project (Right Side) #}
+            {% if next_project %}
+            <a href="{{ url_for('portfolio.project_detail', project_id=next_project.id) }}" class="nav-card next">
+              <div class="nav-info">
+                <span class="nav-label">Next Project</span>
+                <span class="nav-title">{{ next_project.title }}</span>
+              </div>
+              <div class="nav-icon">
+                <i data-lucide="arrow-right"></i>
+              </div>
+            </a>
+            {% endif %}
+
+          </nav>
 
     </div>
   </article>

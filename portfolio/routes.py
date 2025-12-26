@@ -111,17 +111,23 @@ def all_projects():
 
 @portfolio_bp.route("/project/<project_id>", methods=["GET"])
 def project_detail(project_id):
-    """
-    Renders the dedicated project detail page.
-    Handles 'pipelined' navigation via the ?from= query parameter.
-    """
-    project = get_merged_project_data(project_id)
+    # 1. Load ALL projects from the single source
+    projects = load_json_data(PROJECTS_JSON, default=[])
+
+    # 2. Find the specific project
+    project = next((p for p in projects if p["id"] == project_id), None)
 
     if not project:
         abort(404)
 
-    referrer = request.args.get("from")
+    # 3. Calculate Previous and Next
+    current_index = projects.index(project)
 
+    prev_project = projects[current_index - 1] if current_index > 0 else None
+    next_project = projects[current_index + 1] if current_index < len(projects) - 1 else None
+
+    # 4. Back Button Logic
+    referrer = request.args.get("from")
     if referrer == "home":
         back_url = url_for("portfolio.home") + "#projects"
         back_text = "Back to Home"
@@ -135,6 +141,8 @@ def project_detail(project_id):
     return render_template(
         "project_detail.html",
         project=project,
+        prev_project=prev_project,
+        next_project=next_project,
         back_url=back_url,
         back_text=back_text
     )

@@ -126,13 +126,16 @@
 
       <div class="projects-stack">
         {% for p in featured_main %}
+
+        {# Define Image Logic: Get first image from list, or fallback #}
+        {% set thumb_image = p.images[0] if p.images and p.images|length > 0 else url_for('portfolio.static', filename='assets/images/project-placeholder-card.png') %}
+
         <article class="project-card" id="project-{{ p.id | replace(' ', '-') | lower }}">
 
           <div class="project-card__media">
             {#
-               1. Link points to internal project_detail (as requested originally).
-               2. Includes ?from=home for the back button logic.
-               3. No target="_blank" so it opens in the same tab.
+               1. Link points to internal project_detail
+               2. Includes ?from=home for the back button logic
             #}
             <a href="{{ url_for('portfolio.project_detail', project_id=p.id, from='home') }}" class="media-inner" rel="noopener">
               {% if p.tagline %}
@@ -148,7 +151,8 @@
               {% endif %}
 
               <div class="media-image-container">
-                <img src="{{ p.image or url_for('portfolio.static', filename='assets/images/project-placeholder-card.png') }}"
+                {# UPDATED: Uses 'thumb_image' variable set above #}
+                <img src="{{ thumb_image }}"
                      alt="{{ p.title }} Preview" loading="lazy" decoding="async">
               </div>
             </a>
@@ -172,7 +176,7 @@
               {% endfor %}
             </div>
 
-            {# Buttons reverted to Original Style (btn-main) and External Links #}
+            {# Actions #}
             <div class="project-actions">
               {% if p.live_url %}
               <a href="{{ p.live_url }}" target="_blank" rel="noopener" class="btn-main" aria-label="Live Demo">

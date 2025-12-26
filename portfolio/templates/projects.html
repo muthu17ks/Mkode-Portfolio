@@ -35,8 +35,7 @@
           {% set pid = (p.id | default('proj-' ~ loop.index)) %}
           {% set title = p.title | default('Untitled Project') %}
           {% set desc = p.desc | default('Project description coming soon.') %}
-          {% set image = p.image or url_for('portfolio.static', filename='assets/images/project-placeholder-card.png') %}
-          {% set live = p.live_url %}
+          {% set image = p.images[0] if p.images and p.images|length > 0 else url_for('portfolio.static', filename='assets/images/project-placeholder-card.png') %}          {% set live = p.live_url %}
           {% set code = p.code_url %}
           {% set tags = p.tags | default([]) %}
           {% set highlights = p.highlights | default([]) %}
