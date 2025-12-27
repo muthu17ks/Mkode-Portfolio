@@ -4,7 +4,7 @@
   --t-h: 160; --t-s: 84%; --t-l: 39%;
   --n-h: 215; --n-s: 20%; --n-l: 95%;
 
-  --bg-sect-1: hsl(var(--n-h), var(--n-s), 98%);
+  --bg-sect-1: hsl(var(--n-h), var(--n-s), 96%);
   --bg-sect-2: hsl(var(--n-h), var(--n-s), 93%);
   --bg-sect-3: hsl(var(--n-h), var(--n-s), 90%);
   --bg-sect-4: hsl(var(--n-h), var(--n-s), 88%);
@@ -120,7 +120,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track); font-size: 100%; scroll-padding-top: calc(var(--nav-height) + 2rem); }
+html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track); font-size: 100%;}
 body {
   margin: 0; font-family: var(--font-primary); font-size: var(--font-size-base);
   line-height: var(--line-height-base); font-weight: var(--font-weight-regular);
