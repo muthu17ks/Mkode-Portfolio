@@ -649,7 +649,6 @@ document.addEventListener('click', (ev) => {
   setTimeout(dismissPreloader, 5000);
 })();
 
-
 /* 10. Dynamic Rail Track Logic (Smooth Curves) */
 (function() {
   const tocNav = document.querySelector('.toc-nav');
@@ -663,29 +662,23 @@ document.addEventListener('click', (ev) => {
 
   if (links.length === 0) return;
 
-  // --- Configuration ---
-  const parentX = 1;      // Left Track X
-  const childX = 16;      // Right Track X (Matches CSS indentation)
+  const parentX = 1;
+  const childX = 16;
 
   let pathD = "";
   let points = [];
 
-  // 1. Calculate Points based on Text Position
   links.forEach((link, index) => {
     const isChild = link.classList.contains('is-child');
     const targetX = isChild ? childX : parentX;
 
-    // Y-Center of the text link
     const linkCenterY = link.offsetTop + (link.offsetHeight / 2);
 
     points.push({ x: targetX, y: linkCenterY });
   });
 
-  // 2. Draw Smooth Path
   if (points.length > 0) {
-    // Start at top of first item
     pathD += `M ${points[0].x} 0 `;
-    // Line to first item center
     pathD += `L ${points[0].x} ${points[0].y} `;
 
     for (let i = 0; i < points.length - 1; i++) {
@@ -693,21 +686,16 @@ document.addEventListener('click', (ev) => {
       const p2 = points[i+1];
 
       if (p1.x !== p2.x) {
-        // Lane Change: Draw a smooth S-curve
-        // Control points determine the "smoothness"
         const distY = p2.y - p1.y;
-        const cpY1 = p1.y + (distY * 0.5); // Control point 1 Y
-        const cpY2 = p1.y + (distY * 0.5); // Control point 2 Y
+        const cpY1 = p1.y + (distY * 0.5);
+        const cpY2 = p1.y + (distY * 0.5);
 
-        // Cubic Bezier: C (cp1x, cp1y), (cp2x, cp2y), (endx, endy)
         pathD += `C ${p1.x} ${cpY1}, ${p2.x} ${cpY2}, ${p2.x} ${p2.y} `;
       } else {
-        // Straight Line
         pathD += `L ${p2.x} ${p2.y} `;
       }
     }
 
-    // Extend to bottom of list
     const lastP = points[points.length - 1];
     pathD += `L ${lastP.x} ${linksWrapper.offsetHeight} `;
   }
@@ -715,53 +703,41 @@ document.addEventListener('click', (ev) => {
   trackPath.setAttribute('d', pathD);
   fillPath.setAttribute('d', pathD);
 
-  // --- 3. Scroll Sync ---
   const totalLength = trackPath.getTotalLength();
   fillPath.style.strokeDasharray = `${totalLength} ${totalLength}`;
   fillPath.style.strokeDashoffset = totalLength;
 
   const updateRail = () => {
-    const scrollPos = window.scrollY + 120; // Navbar offset
+    const scrollPos = window.scrollY + 120;
 
-    // Identify Active Section
     let activeIndex = -1;
     for (let i = 0; i < links.length; i++) {
       const id = links[i].getAttribute('href');
-      // Handle the '#preview' special case or standard ID
       const target = document.querySelector(id);
 
       if (target) {
-        // Use a slightly larger offset for detection
         if (target.offsetTop <= scrollPos + 100) {
           activeIndex = i;
         }
       }
     }
 
-    // Fallback: If at bottom of page, highlight last item
     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
       activeIndex = links.length - 1;
     }
 
-    // Update Visuals
     links.forEach((l, i) => {
       if (i === activeIndex) l.classList.add('is-active');
       else l.classList.remove('is-active');
     });
 
     if (activeIndex >= 0) {
-      // Calculate how much line to fill
       const activePoint = points[activeIndex];
-
-      // We can use getPointAtLength to be precise, or just estimate ratio
-      // Since our path is vertical-ish, Y-ratio is good enough
       const percent = activePoint.y / linksWrapper.offsetHeight;
 
-      // LOGIC CHANGE: Only add the 0.05 buffer if we are at the last item (scrolled all headings)
       const isLastItem = activeIndex === links.length - 1;
       const buffer = isLastItem ? 0.05 : 0;
 
-      // Calculate exact dash offset
       fillPath.style.strokeDashoffset = totalLength - (totalLength * (percent + buffer));
     } else {
       fillPath.style.strokeDashoffset = totalLength;
@@ -769,7 +745,15 @@ document.addEventListener('click', (ev) => {
   };
 
   window.addEventListener('scroll', updateRail, { passive: true });
-  window.addEventListener('resize', () => location.reload());
+
+  let previousWidth = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (window.innerWidth !== previousWidth) {
+      previousWidth = window.innerWidth;
+      location.reload();
+    }
+  });
+
   setTimeout(updateRail, 150);
 })();
 
@@ -788,19 +772,15 @@ document.addEventListener('click', (ev) => {
   let autoPlayInterval;
   let isHovered = false;
 
-  // --- 1. Core Switching Logic ---
-
   const moveToSlide = (targetIndex) => {
     const currentSlide = track.querySelector('.current-slide');
     const targetSlide = slides[targetIndex];
 
     if (!currentSlide || !targetSlide) return;
 
-    // 1. Update Slide Classes (CSS handles opacity fade)
     currentSlide.classList.remove('current-slide');
     targetSlide.classList.add('current-slide');
 
-    // 2. Update Dots
     if (dotsNav) {
       const currentDot = dotsNav.querySelector('.current-slide');
       const targetDot = dots[targetIndex];
@@ -809,13 +789,10 @@ document.addEventListener('click', (ev) => {
     }
   };
 
-  // --- 2. Directional Logic (Infinite Loop) ---
-
   const showNextSlide = () => {
     const currentSlide = track.querySelector('.current-slide');
     const currentIndex = slides.findIndex(s => s === currentSlide);
 
-    // Loop: If at end (length - 1), go to 0. Else +1.
     let nextIndex = currentIndex + 1;
     if (nextIndex >= slides.length) {
       nextIndex = 0;
@@ -828,7 +805,6 @@ document.addEventListener('click', (ev) => {
     const currentSlide = track.querySelector('.current-slide');
     const currentIndex = slides.findIndex(s => s === currentSlide);
 
-    // Loop: If at 0, go to end (length - 1). Else -1.
     let prevIndex = currentIndex - 1;
     if (prevIndex < 0) {
       prevIndex = slides.length - 1;
@@ -837,12 +813,9 @@ document.addEventListener('click', (ev) => {
     moveToSlide(prevIndex);
   };
 
-  // --- 3. Event Listeners ---
-
   if (nextBtn) {
     nextBtn.addEventListener('click', () => {
       showNextSlide();
-      // Reset timer on manual interaction so it doesn't jump immediately after
       stopAutoplay();
       startAutoplay();
     });
@@ -868,43 +841,35 @@ document.addEventListener('click', (ev) => {
     });
   }
 
-  // --- 4. Autoplay Logic (View-Based) ---
-
   const startAutoplay = () => {
-    stopAutoplay(); // Clear existing to prevent double timers
+    stopAutoplay();
     autoPlayInterval = setInterval(() => {
       if (!isHovered) showNextSlide();
-    }, 3000); // 3 Seconds Interval
+    }, 3000);
   };
 
   const stopAutoplay = () => {
     if (autoPlayInterval) clearInterval(autoPlayInterval);
   };
 
-  // Pause on Hover (UX Best Practice)
   carousel.addEventListener('mouseenter', () => { isHovered = true; });
   carousel.addEventListener('mouseleave', () => { isHovered = false; });
 
-  // Intersection Observer: Only run when visible
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        // Wait 1s before starting so it's not jarring
         setTimeout(startAutoplay, 1000);
       } else {
         stopAutoplay();
       }
     });
-  }, { threshold: 0.5 }); // 50% visible to start
+  }, { threshold: 0.5 });
 
-  // Only init if we have multiple slides
   if (slides.length > 1) {
     observer.observe(carousel);
-    // Ensure arrows are visible (remove is-hidden if it was set in HTML)
     if(prevBtn) prevBtn.classList.remove('is-hidden');
     if(nextBtn) nextBtn.classList.remove('is-hidden');
   } else {
-    // Hide controls if single image
     if(prevBtn) prevBtn.style.display = 'none';
     if(nextBtn) nextBtn.style.display = 'none';
     if(dotsNav) dotsNav.style.display = 'none';
