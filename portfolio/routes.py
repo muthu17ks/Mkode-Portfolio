@@ -29,7 +29,6 @@ from . import portfolio_bp
 DATA_DIR = Path(__file__).parent / "data"
 PROJECTS_JSON = DATA_DIR / "projects.json"
 SITE_DATA_JSON = DATA_DIR / "site_data.json"
-PROJECT_DETAILS_JSON = DATA_DIR / "project_details.json"
 
 
 def load_json_data(path, default=None):
@@ -47,24 +46,6 @@ def load_json_data(path, default=None):
     except Exception:
         current_app.logger.exception(f"Failed to load {path.name}")
         return default
-
-
-def get_merged_project_data(project_id):
-    """
-    Fetches basic metadata from projects.json and detailed content
-    from project_details.json, merging them into one object.
-    """
-    all_projects = load_json_data(PROJECTS_JSON, default=[])
-    all_details = load_json_data(PROJECT_DETAILS_JSON, default=[])
-
-    project_meta = next((p for p in all_projects if p["id"] == project_id), None)
-
-    if not project_meta:
-        return None
-
-    project_detail = next((d for d in all_details if d["id"] == project_id), {})
-
-    return {**project_meta, **project_detail}
 
 
 @portfolio_bp.route("/", methods=["GET"])
@@ -111,6 +92,11 @@ def all_projects():
 
 @portfolio_bp.route("/project/<project_id>", methods=["GET"])
 def project_detail(project_id):
+    """
+    Renders the dedicated project detail page.
+    Handles 'pipelined' navigation via the ?from= query parameter.
+    Calculates Previous/Next projects for footer navigation using the single list.
+    """
     # 1. Load ALL projects from the single source
     projects = load_json_data(PROJECTS_JSON, default=[])
 
@@ -123,10 +109,18 @@ def project_detail(project_id):
     # 3. Calculate Previous and Next
     current_index = projects.index(project)
 
-    prev_project = projects[current_index - 1] if current_index > 0 else None
-    next_project = projects[current_index + 1] if current_index < len(projects) - 1 else None
+    prev_project = None
+    next_project = None
 
-    # 4. Back Button Logic
+    # Previous: If index > 0, get item at index-1
+    if current_index > 0:
+        prev_project = projects[current_index - 1]
+
+    # Next: If index < last index, get item at index+1
+    if current_index < len(projects) - 1:
+        next_project = projects[current_index + 1]
+
+    # 4. Handle Back Button Logic
     referrer = request.args.get("from")
     if referrer == "home":
         back_url = url_for("portfolio.home") + "#projects"

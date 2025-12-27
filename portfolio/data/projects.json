@@ -8,24 +8,34 @@
     "timeline": "3 Weeks",
     "last_updated": "Feb 2025",
     "desc": "A modern portfolio website built with Flask. Features a JSON-driven content architecture for easy updates.",
-    "overview": "A high-performance, data-driven portfolio website designed to serve as a centralized content management system. Unlike typical static site generators, this application uses a custom JSON-based architecture to decouple data from the presentation layer.",
-    "problem": "Static HTML portfolios are difficult to maintain, and CMS solutions like WordPress are too heavy. I needed a lightweight, custom solution that demonstrated full-stack capability while remaining performant.",
-    "solution": "I built a Flask (Python) application that renders Jinja2 templates dynamically. The frontend implements a glassmorphism design system using raw CSS variables for easy theming.",
     "images": [
       "/portfolio/static/images/project-portfolio-thumb.png",
-      "/portfolio/static/images/project-portfolio-2.png",
-      "/portfolio/static/images/project-portfolio-3.png"
+      "/portfolio/static/images/project-portfolio-2.png"
     ],
-    "highlights": ["Data-Driven Architecture", "AJAX Contact System", "Glassmorphism UI"],
-    "tags": ["Flask", "Python", "JavaScript", "HTML5/CSS3", "JSON"],
-    "features": ["JSON-driven content management", "Dynamic Routing System", "SMTP Email System", "Theme Persistence"],
-    "challenges": [
-      { "title": "CSS Architecture", "desc": "Managing glassmorphism effects across light and dark modes." },
-      { "title": "Asset Optimization", "desc": "Implemented lazy loading for a Lighthouse score of 95+." }
-    ],
+    "highlights": ["Data-Driven Architecture", "Glassmorphism UI"],
+    "tags": ["Flask", "Python", "JavaScript", "HTML5", "JSON"],
     "live_url": "#",
     "code_url": "#",
-    "featured": true
+    "featured": true,
+    "sections": [
+      { "id": "preview", "title": "Preview", "type": "carousel" },
+      { "id": "overview", "title": "Overview", "type": "text", "content": "A high-performance, data-driven portfolio website designed to serve as a centralized content management system. Unlike typical static site generators, this application uses a custom JSON-based architecture to decouple data from the presentation layer." },
+
+      { "id": "problem", "title": "The Problem", "type": "text", "content": "Static HTML portfolios are difficult to maintain; updating a single project often requires editing multiple HTML files. I needed a lightweight, custom solution that demonstrated full-stack capability while remaining performant." },
+
+      {
+        "id": "solution_group",
+        "title": "The Solution",
+        "type": "group",
+        "subsections": [
+          { "id": "architecture", "title": "Architecture", "content": "The app follows a Model-View-Template (MVT) pattern. Flask handles the routing..." },
+          { "id": "frontend", "title": "Frontend Logic", "content": "Using vanilla JavaScript for the magnetic cursor, intersections, and dynamic TOC drawing..." },
+          { "id": "data", "title": "Data Layer", "content": "A flat-file JSON database acts as the single source of truth, allowing instant updates..." }
+        ]
+      },
+
+      { "id": "features", "title": "Key Features", "type": "list", "content_items": ["JSON-driven CMS", "Dynamic Routing", "Theme Persistence"] }
+    ]
   },
   {
     "id": "familyconnect",
@@ -36,18 +46,21 @@
     "timeline": "2 Months",
     "last_updated": "Jan 2025",
     "desc": "A private social feed for families with secure auth and image optimization.",
-    "overview": "FamilyConnect is a private social networking prototype designed to simulate the core architecture of platforms like Facebook, but optimized for close-knit family groups with a focus on privacy.",
-    "problem": "Public social networks monetize data. There was a need for a self-hostable, isolated environment for families to share updates securely.",
-    "solution": "A monolithic Flask application backed by a normalized MySQL database. Implements strict Role-Based Access Control (RBAC) and server-side image compression.",
     "images": ["/portfolio/static/images/project-family-connect-thumb.png"],
     "highlights": ["Secure Auth System", "Server-side Image Compression", "Normalized MySQL Schema"],
     "tags": ["Flask", "Python", "MySQL", "Pillow", "Security"],
-    "features": ["Secure Authentication (BCrypt)", "Image Processing Pipeline", "Relational Feed Algorithm", "Admin Dashboard"],
-    "challenges": [
-      { "title": "Database Normalization", "desc": "Efficiently linking Users, Posts, and Comments without N+1 query issues." }
-    ],
+    "live_url": "",
     "code_url": "https://github.com/muthu17ks/FamilyConnect",
-    "featured": true
+    "featured": true,
+    "sections": [
+      { "id": "preview", "title": "App Visuals", "type": "carousel" },
+      { "id": "overview", "title": "Overview", "type": "text", "content": "FamilyConnect is a private social networking prototype designed to simulate the core architecture of platforms like Facebook, but optimized for close-knit family groups with a focus on privacy. Public social networks monetize user data and expose family memories to the public internet." },
+      { "id": "features", "title": "Core Modules", "type": "list", "content_items": ["Secure Authentication (BCrypt)", "Image Processing Pipeline", "Relational Feed Algorithm", "Admin Dashboard"] },
+      { "id": "challenges", "title": "Challenges", "type": "grid", "content_items": [
+          { "title": "Database Normalization", "desc": "Efficiently linking Users, Posts, and Comments (nested relationships) was critical. I had to carefully define Foreign Keys and indexing strategies to prevent N+1 query performance issues." }
+        ]
+      }
+    ]
   },
   {
     "id": "workplace",
@@ -58,18 +71,17 @@
     "timeline": "1 Month",
     "last_updated": "Dec 2024",
     "desc": "A centralized dashboard for student teams to manage tasks and documents.",
-    "overview": "Workplace is a collaborative task management hub designed specifically for academic teams. It provides a single dashboard for tracking deadlines and sharing resources.",
-    "problem": "Student group projects often fail due to fragmented communication. Teams lacked a 'Single Source of Truth'.",
-    "solution": "A lightweight project management tool using Flask. Features a Kanban-style workflow and file repository.",
     "images": ["/portfolio/static/images/project-workspace-thumb.png"],
     "highlights": ["Role-Based Access Control", "Kanban-style Tracker", "Document Repository"],
     "tags": ["Flask", "Python", "Bootstrap", "MySQL", "RBAC"],
-    "features": ["RBAC System", "Document Repository", "Task State Machine", "Activity Logging"],
-    "challenges": [
-      { "title": "Route Protection", "desc": "Securing admin routes against unauthorized access." }
-    ],
+    "live_url": "",
     "code_url": "https://github.com/muthu17ks/workplace",
-    "featured": true
+    "featured": true,
+    "sections": [
+      { "id": "preview", "title": "Dashboard", "type": "carousel" },
+      { "id": "overview", "title": "Overview", "type": "text", "content": "Workplace is a collaborative task management hub designed specifically for academic teams. It solves the problem of fragmented communication by providing a single dashboard for tracking deadlines, sharing resources, and managing project milestones. Think of it as a simplified Trello or Asana." },
+      { "id": "features", "title": "Features", "type": "list", "content_items": ["RBAC System", "Document Repository", "Task State Machine", "Activity Logging"] }
+    ]
   },
   {
     "id": "tic-tac-toe-game",
@@ -80,18 +92,20 @@
     "timeline": "1 Week",
     "last_updated": "Nov 2024",
     "desc": "A graphical game built from scratch using Python Turtle with a custom AI.",
-    "overview": "A graphical implementation of Tic Tac Toe featuring a custom-built AI opponent. This project served as a study in game state management and heuristic algorithms.",
-    "problem": "Rendering a responsive GUI and programming an opponent that actually 'blocks' user moves efficiently.",
-    "solution": "Written in Python Turtle. The AI evaluates the board state after every turn to identify winning threats and block them.",
     "images": ["/portfolio/static/images/project-tictactoe-thumb.png"],
     "highlights": ["Custom Rendering Loop", "Heuristic AI Opponent", "Persistent High-Scores"],
     "tags": ["Python", "Turtle Graphics", "Game AI", "Algorithms"],
-    "features": ["Heuristic AI", "Event-Driven UI", "60 FPS Game Loop", "State Reset System"],
-    "challenges": [
-      { "title": "Coordinate Mapping", "desc": "Translating pixel clicks to the logical 3x3 game matrix." }
-    ],
+    "live_url": "",
     "code_url": "https://github.com/muthu17ks/Tic-Tac-Toe-Game",
-    "featured": true
+    "featured": true,
+    "sections": [
+      { "id": "preview", "title": "Gameplay", "type": "carousel" },
+      { "id": "overview", "title": "Overview", "type": "text", "content": "A graphical implementation of the classic Tic Tac Toe game, featuring a custom-built AI opponent. This project served as a deep study in game state management, heuristic algorithms, and rendering graphics using Python's Turtle module." },
+      { "id": "challenges", "title": "AI Logic", "type": "grid", "content_items": [
+          { "title": "Coordinate Mapping", "desc": "The hardest part was translating pixel-perfect mouse clicks on the canvas (e.g., x=150, y=200) to the logical 3x3 game matrix (row=0, col=2) to update the internal state correctly." }
+        ]
+      }
+    ]
   },
   {
     "id": "departmental-website",
@@ -102,18 +116,16 @@
     "timeline": "3 Months",
     "last_updated": "Aug 2023",
     "desc": "A digital portal for university faculty and students with a custom CMS.",
-    "overview": "A digital portal for the Computer Science department, digitizing the traditional notice board. It provides a CMS for faculty to publish news and a responsive interface for students.",
-    "problem": "Critical information about exams was often missed because it was only posted on a physical board.",
-    "solution": "A dynamic website with an Admin Panel. Faculty upload notices which are pushed to the student news feed.",
     "images": [],
     "highlights": ["Custom CMS for Faculty", "Mobile-First Design", "Secure Admin Panel"],
     "tags": ["HTML", "CSS", "JavaScript", "PHP/MySQL"],
-    "features": ["Custom CMS", "PDF Viewer Integration", "Search & Filter", "Mobile Responsive"],
-    "challenges": [
-      { "title": "Legacy Browser Support", "desc": "Ensuring functionality on older university lab computers." }
-    ],
+    "live_url": "",
     "code_url": "https://github.com/muthu17ks/Departmental-Website",
-    "featured": false
+    "featured": false,
+    "sections": [
+      { "id": "overview", "title": "Overview", "type": "text", "content": "A comprehensive digital portal for the Computer Science department, developed to digitize the traditional notice board. It provides a CMS for faculty members to publish news and a responsive interface for students to access exam schedules, syllabus materials, and event announcements." },
+      { "id": "features", "title": "Capabilities", "type": "list", "content_items": ["Custom CMS for Faculty (CRUD operations)", "PDF Viewer Integration for notices", "Search & Filter by Year/Semester", "Mobile Responsive Layout"] }
+    ]
   },
   {
     "id": "watermark-studio",
@@ -124,18 +136,16 @@
     "timeline": "2 Weeks",
     "last_updated": "July 2023",
     "desc": "A desktop tool that applies transparent watermarks to images in bulk.",
-    "overview": "A desktop automation tool built to batch-process images. It allows creators to apply transparent watermarks to hundreds of photos in seconds.",
-    "problem": "Manually watermarking event photos is tedious. Online tools often reduce quality.",
-    "solution": "A native GUI app using Tkinter and Pillow. Performs pixel-perfect alpha compositing.",
     "images": [],
     "highlights": ["Batch Image Processing", "Pixel-perfect Alpha Compositing", "Clean Tkinter GUI"],
     "tags": ["Python", "Tkinter", "Pillow", "Image Processing"],
-    "features": ["Batch Processing", "Alpha Compositing", "Dynamic Positioning", "GUI Controls"],
-    "challenges": [
-      { "title": "Aspect Ratio Logic", "desc": "Keeping watermarks proportional on different image sizes." }
-    ],
+    "live_url": "",
     "code_url": "https://github.com/muthu17ks/Watermark-Studio",
-    "featured": false
+    "featured": false,
+    "sections": [
+      { "id": "overview", "title": "Overview", "type": "text", "content": "Watermark Studio is a desktop automation tool built to batch-process images. It allows photographers and content creators to apply transparent watermarks to hundreds of photos in seconds, preserving metadata and quality." },
+      { "id": "features", "title": "Key Functions", "type": "list", "content_items": ["High-speed Batch Processing Loop", "Alpha Compositing for transparency", "Dynamic Positioning (Top-Left, Center, etc.)", "Real-time GUI Controls for Opacity"] }
+    ]
   },
   {
     "id": "snake-game",
@@ -146,17 +156,19 @@
     "timeline": "1 Week",
     "last_updated": "June 2023",
     "desc": "A study in game loop architecture and collision detection algorithms.",
-    "overview": "A faithful recreation of the classic arcade Snake game. Explores game loops, collision detection, and real-time input.",
-    "problem": "Understanding real-time user input and screen updates without lagging.",
-    "solution": "Implemented using Pygame. Uses a queue-based system for the snake body.",
     "images": ["/portfolio/static/images/project-snake-game-thumb.png"],
     "highlights": ["Custom Collision Detection", "Queue-based Logic", "Real-time Event Loop"],
     "tags": ["Python", "Pygame", "Game Dev", "Geometry"],
-    "features": ["Coordinate Queue System", "Collision Detection", "Score Persistence", "Dynamic Difficulty"],
-    "challenges": [
-      { "title": "Input Latency", "desc": "Preventing the snake from turning into itself during rapid key presses." }
-    ],
+    "live_url": "",
     "code_url": "https://github.com/muthu17ks/Snake-Game",
-    "featured": false
+    "featured": false,
+    "sections": [
+      { "id": "preview", "title": "Game Screen", "type": "carousel" },
+      { "id": "overview", "title": "Overview", "type": "text", "content": "A faithful recreation of the classic arcade Snake game. This project explores the fundamentals of game development, including the main game loop, collision detection algorithms, and real-time user input handling." },
+      { "id": "challenges", "title": "Logic", "type": "grid", "content_items": [
+          { "title": "Input Latency (The Suicide Bug)", "desc": "If a player pressed 'Down' then 'Left' faster than one game tick, the snake would turn into itself and die immediately. I solved this by buffering input commands." }
+        ]
+      }
+    ]
   }
 ]

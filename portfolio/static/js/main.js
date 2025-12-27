@@ -443,7 +443,7 @@ document.addEventListener('click', (ev) => {
   const interactiveSelectors = [
     'a', 'button', '.btn-main', '.btn-hero-primary',
     '.hero__avatar', '.tech-item', '[role="button"]', '.tech-badge',
-    '.action-badge'
+    '.action-badge', '.tech-tag'
   ].join(',');
 
   function shouldIgnore(el) {
@@ -650,138 +650,130 @@ document.addEventListener('click', (ev) => {
 })();
 
 
-/* 8. PCB Circuit Line Generator & Scroll Spy */
+/* 10. Dynamic Rail Track Logic (Smooth Curves) */
 (function() {
-  const svg = document.querySelector('.toc-circuit-svg');
-  const trackPath = document.querySelector('.circuit-track');
-  const fillPath = document.querySelector('.circuit-fill');
-  const linksWrapper = document.querySelector('.toc-links-wrapper');
-  const links = Array.from(document.querySelectorAll('.toc-link'));
-  const sections = document.querySelectorAll('.scroll-spy-target');
-  const contentContainer = document.querySelector('.layout-content');
+  const tocNav = document.querySelector('.toc-nav');
+  if (!tocNav) return;
 
-  if (!svg || !links.length) return;
+  const svg = tocNav.querySelector('.toc-rail-svg');
+  const trackPath = svg.querySelector('.rail-track');
+  const fillPath = svg.querySelector('.rail-fill');
+  const linksWrapper = tocNav.querySelector('.toc-links-wrapper');
+  const links = Array.from(linksWrapper.querySelectorAll('.toc-link'));
 
-  // Configuration
-  const LANE_LEFT = 1;
-  const LANE_RIGHT = 15;
-  const lanePattern = [0, 0, 1, 1, 0, 0, 1, 1];
+  if (links.length === 0) return;
 
-  let nodeLengths = [];
+  // --- Configuration ---
+  const parentX = 1;      // Left Track X
+  const childX = 16;      // Right Track X (Matches CSS indentation)
 
-  function drawCircuit() {
-    // 1. Ensure SVG matches container height perfectly
-    const wrapperHeight = linksWrapper.scrollHeight;
-    svg.style.height = `${wrapperHeight}px`;
-    svg.setAttribute('height', wrapperHeight);
+  let pathD = "";
+  let points = [];
 
-    const wrapperRect = linksWrapper.getBoundingClientRect();
+  // 1. Calculate Points based on Text Position
+  links.forEach((link, index) => {
+    const isChild = link.classList.contains('is-child');
+    const targetX = isChild ? childX : parentX;
 
-    // 2. Get Y positions relative to the wrapper
-    const linkYPositions = links.map(link => {
-      const rect = link.getBoundingClientRect();
-      // Calculate vertical center relative to wrapper top
-      return rect.top - wrapperRect.top + (rect.height / 2);
-    });
+    // Y-Center of the text link
+    const linkCenterY = link.offsetTop + (link.offsetHeight / 2);
 
-    // 3. Build Path
-    let d = `M ${LANE_LEFT} 0`;
+    points.push({ x: targetX, y: linkCenterY });
+  });
 
-    let prevX = LANE_LEFT;
-    let prevY = 0;
-    let accumulatedLength = 0;
+  // 2. Draw Smooth Path
+  if (points.length > 0) {
+    // Start at top of first item
+    pathD += `M ${points[0].x} 0 `;
+    // Line to first item center
+    pathD += `L ${points[0].x} ${points[0].y} `;
 
-    nodeLengths = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      const p1 = points[i];
+      const p2 = points[i+1];
 
-    linkYPositions.forEach((y, i) => {
-      const isRightLane = lanePattern[i % lanePattern.length] === 1;
-      const currentX = isRightLane ? LANE_RIGHT : LANE_LEFT;
+      if (p1.x !== p2.x) {
+        // Lane Change: Draw a smooth S-curve
+        // Control points determine the "smoothness"
+        const distY = p2.y - p1.y;
+        const cpY1 = p1.y + (distY * 0.5); // Control point 1 Y
+        const cpY2 = p1.y + (distY * 0.5); // Control point 2 Y
 
-      // Indentation logic
-      if (isRightLane) links[i].classList.add('is-indented');
-      else links[i].classList.remove('is-indented');
-
-      // Calculate Midpoint for lane change
-      const midY = prevY + (y - prevY) * 0.5;
-
-      // Vertical Drop
-      d += ` L ${prevX} ${midY}`;
-      accumulatedLength += Math.sqrt(Math.pow(prevX - prevX, 2) + Math.pow(midY - prevY, 2));
-
-      // Diagonal Cut
-      d += ` L ${currentX} ${y}`;
-      accumulatedLength += Math.sqrt(Math.pow(currentX - prevX, 2) + Math.pow(y - midY, 2));
-
-      nodeLengths.push(accumulatedLength);
-
-      prevX = currentX;
-      prevY = y;
-    });
-
-    // Trail off at bottom
-    const trailY = Math.min(prevY + 25, wrapperHeight); // Don't exceed container
-    d += ` L ${prevX} ${trailY}`;
-
-    // Apply paths
-    trackPath.setAttribute('d', d);
-    fillPath.setAttribute('d', d);
-
-    // Force immediate update
-    updateScroll();
-  }
-
-  // --- Resize & Load Handling ---
-  if (window.ResizeObserver && contentContainer) {
-    const ro = new ResizeObserver(() => {
-      requestAnimationFrame(drawCircuit);
-    });
-    ro.observe(contentContainer);
-    ro.observe(linksWrapper);
-  } else {
-    window.addEventListener('resize', drawCircuit);
-    window.addEventListener('load', drawCircuit);
-  }
-
-  // Initial run
-  drawCircuit();
-
-  // --- Scroll Spy Logic ---
-  const observerOptions = {
-    root: null,
-    rootMargin: '-10% 0px -70% 0px',
-    threshold: 0
-  };
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const id = entry.target.getAttribute('id');
-        const index = links.findIndex(l => l.getAttribute('href') === `#${id}`);
-        if (index !== -1) setActive(index);
+        // Cubic Bezier: C (cp1x, cp1y), (cp2x, cp2y), (endx, endy)
+        pathD += `C ${p1.x} ${cpY1}, ${p2.x} ${cpY2}, ${p2.x} ${p2.y} `;
+      } else {
+        // Straight Line
+        pathD += `L ${p2.x} ${p2.y} `;
       }
-    });
-  }, observerOptions);
+    }
 
-  sections.forEach(sec => observer.observe(sec));
+    // Extend to bottom of list
+    const lastP = points[points.length - 1];
+    pathD += `L ${lastP.x} ${linksWrapper.offsetHeight} `;
+  }
 
-  function setActive(index) {
+  trackPath.setAttribute('d', pathD);
+  fillPath.setAttribute('d', pathD);
+
+  // --- 3. Scroll Sync ---
+  const totalLength = trackPath.getTotalLength();
+  fillPath.style.strokeDasharray = `${totalLength} ${totalLength}`;
+  fillPath.style.strokeDashoffset = totalLength;
+
+  const updateRail = () => {
+    const scrollPos = window.scrollY + 120; // Navbar offset
+
+    // Identify Active Section
+    let activeIndex = -1;
+    for (let i = 0; i < links.length; i++) {
+      const id = links[i].getAttribute('href');
+      // Handle the '#preview' special case or standard ID
+      const target = document.querySelector(id);
+
+      if (target) {
+        // Use a slightly larger offset for detection
+        if (target.offsetTop <= scrollPos + 100) {
+          activeIndex = i;
+        }
+      }
+    }
+
+    // Fallback: If at bottom of page, highlight last item
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
+      activeIndex = links.length - 1;
+    }
+
+    // Update Visuals
     links.forEach((l, i) => {
-      if (i === index) l.classList.add('is-active');
+      if (i === activeIndex) l.classList.add('is-active');
       else l.classList.remove('is-active');
     });
 
-    if (nodeLengths[index] !== undefined) {
-      fillPath.style.strokeDasharray = `${nodeLengths[index] + 5} 10000`;
+    if (activeIndex >= 0) {
+      // Calculate how much line to fill
+      const activePoint = points[activeIndex];
+
+      // We can use getPointAtLength to be precise, or just estimate ratio
+      // Since our path is vertical-ish, Y-ratio is good enough
+      const percent = activePoint.y / linksWrapper.offsetHeight;
+
+      // LOGIC CHANGE: Only add the 0.05 buffer if we are at the last item (scrolled all headings)
+      const isLastItem = activeIndex === links.length - 1;
+      const buffer = isLastItem ? 0.05 : 0;
+
+      // Calculate exact dash offset
+      fillPath.style.strokeDashoffset = totalLength - (totalLength * (percent + buffer));
+    } else {
+      fillPath.style.strokeDashoffset = totalLength;
     }
-  }
+  };
 
-  function updateScroll() {
-     if (window.scrollY < 100 && links.length > 0) setActive(0);
-  }
-
+  window.addEventListener('scroll', updateRail, { passive: true });
+  window.addEventListener('resize', () => location.reload());
+  setTimeout(updateRail, 150);
 })();
 
-/* 9. Image Carousel Logic */
+/* 9. Image Carousel Logic (Infinite Loop + View-Based Autoplay) */
 (function() {
   const carousel = document.querySelector('.project-carousel');
   if (!carousel) return;
@@ -793,58 +785,74 @@ document.addEventListener('click', (ev) => {
   const dotsNav = carousel.querySelector('.carousel-nav');
   const dots = dotsNav ? Array.from(dotsNav.children) : [];
 
-  // Arrange slides next to each other?
-  // CSS handles opacity/absolute, so we just toggle class .current-slide
+  let autoPlayInterval;
+  let isHovered = false;
 
-  const updateSlide = (current, target) => {
-    current.classList.remove('current-slide');
-    target.classList.add('current-slide');
-  };
+  // --- 1. Core Switching Logic ---
 
-  const updateDots = (targetIndex) => {
-    if(!dotsNav) return;
-    const currentDot = dotsNav.querySelector('.current-slide');
-    const targetDot = dots[targetIndex];
-    if(currentDot) currentDot.classList.remove('current-slide');
-    if(targetDot) targetDot.classList.add('current-slide');
-  };
+  const moveToSlide = (targetIndex) => {
+    const currentSlide = track.querySelector('.current-slide');
+    const targetSlide = slides[targetIndex];
 
-  const updateArrows = (targetIndex) => {
-    if (!prevBtn || !nextBtn) return;
+    if (!currentSlide || !targetSlide) return;
 
-    if (targetIndex === 0) {
-      prevBtn.classList.add('is-hidden');
-      nextBtn.classList.remove('is-hidden');
-    } else if (targetIndex === slides.length - 1) {
-      prevBtn.classList.remove('is-hidden');
-      nextBtn.classList.add('is-hidden');
-    } else {
-      prevBtn.classList.remove('is-hidden');
-      nextBtn.classList.remove('is-hidden');
+    // 1. Update Slide Classes (CSS handles opacity fade)
+    currentSlide.classList.remove('current-slide');
+    targetSlide.classList.add('current-slide');
+
+    // 2. Update Dots
+    if (dotsNav) {
+      const currentDot = dotsNav.querySelector('.current-slide');
+      const targetDot = dots[targetIndex];
+      if(currentDot) currentDot.classList.remove('current-slide');
+      if(targetDot) targetDot.classList.add('current-slide');
     }
   };
 
+  // --- 2. Directional Logic (Infinite Loop) ---
+
+  const showNextSlide = () => {
+    const currentSlide = track.querySelector('.current-slide');
+    const currentIndex = slides.findIndex(s => s === currentSlide);
+
+    // Loop: If at end (length - 1), go to 0. Else +1.
+    let nextIndex = currentIndex + 1;
+    if (nextIndex >= slides.length) {
+      nextIndex = 0;
+    }
+
+    moveToSlide(nextIndex);
+  };
+
+  const showPrevSlide = () => {
+    const currentSlide = track.querySelector('.current-slide');
+    const currentIndex = slides.findIndex(s => s === currentSlide);
+
+    // Loop: If at 0, go to end (length - 1). Else -1.
+    let prevIndex = currentIndex - 1;
+    if (prevIndex < 0) {
+      prevIndex = slides.length - 1;
+    }
+
+    moveToSlide(prevIndex);
+  };
+
+  // --- 3. Event Listeners ---
+
   if (nextBtn) {
     nextBtn.addEventListener('click', () => {
-      const currentSlide = track.querySelector('.current-slide');
-      const nextSlide = currentSlide.nextElementSibling;
-      const targetIndex = slides.findIndex(slide => slide === nextSlide);
-
-      updateSlide(currentSlide, nextSlide);
-      updateDots(targetIndex);
-      updateArrows(targetIndex);
+      showNextSlide();
+      // Reset timer on manual interaction so it doesn't jump immediately after
+      stopAutoplay();
+      startAutoplay();
     });
   }
 
   if (prevBtn) {
     prevBtn.addEventListener('click', () => {
-      const currentSlide = track.querySelector('.current-slide');
-      const prevSlide = currentSlide.previousElementSibling;
-      const targetIndex = slides.findIndex(slide => slide === prevSlide);
-
-      updateSlide(currentSlide, prevSlide);
-      updateDots(targetIndex);
-      updateArrows(targetIndex);
+      showPrevSlide();
+      stopAutoplay();
+      startAutoplay();
     });
   }
 
@@ -852,14 +860,54 @@ document.addEventListener('click', (ev) => {
     dotsNav.addEventListener('click', e => {
       const targetDot = e.target.closest('button');
       if (!targetDot) return;
-
-      const currentSlide = track.querySelector('.current-slide');
       const targetIndex = dots.findIndex(dot => dot === targetDot);
-      const targetSlide = slides[targetIndex];
 
-      updateSlide(currentSlide, targetSlide);
-      updateDots(targetIndex);
-      updateArrows(targetIndex);
+      moveToSlide(targetIndex);
+      stopAutoplay();
+      startAutoplay();
     });
   }
+
+  // --- 4. Autoplay Logic (View-Based) ---
+
+  const startAutoplay = () => {
+    stopAutoplay(); // Clear existing to prevent double timers
+    autoPlayInterval = setInterval(() => {
+      if (!isHovered) showNextSlide();
+    }, 3000); // 3 Seconds Interval
+  };
+
+  const stopAutoplay = () => {
+    if (autoPlayInterval) clearInterval(autoPlayInterval);
+  };
+
+  // Pause on Hover (UX Best Practice)
+  carousel.addEventListener('mouseenter', () => { isHovered = true; });
+  carousel.addEventListener('mouseleave', () => { isHovered = false; });
+
+  // Intersection Observer: Only run when visible
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // Wait 1s before starting so it's not jarring
+        setTimeout(startAutoplay, 1000);
+      } else {
+        stopAutoplay();
+      }
+    });
+  }, { threshold: 0.5 }); // 50% visible to start
+
+  // Only init if we have multiple slides
+  if (slides.length > 1) {
+    observer.observe(carousel);
+    // Ensure arrows are visible (remove is-hidden if it was set in HTML)
+    if(prevBtn) prevBtn.classList.remove('is-hidden');
+    if(nextBtn) nextBtn.classList.remove('is-hidden');
+  } else {
+    // Hide controls if single image
+    if(prevBtn) prevBtn.style.display = 'none';
+    if(nextBtn) nextBtn.style.display = 'none';
+    if(dotsNav) dotsNav.style.display = 'none';
+  }
+
 })();

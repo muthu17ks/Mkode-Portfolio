@@ -11,7 +11,7 @@
   <article class="project-page">
     <div class="container">
 
-      {# --- 1. Header --- #}
+      {# --- Header --- #}
       <header class="project-header">
         <div class="project-back-wrapper">
           <a href="{{ back_url }}" class="link-archive icon-link">
@@ -24,56 +24,44 @@
         </div>
       </header>
 
-      {# --- 2. Main Layout Grid --- #}
       <div class="project-layout-grid">
 
-        {# --- LEFT COLUMN: Image, Meta Grid, Content --- #}
+        {# --- LEFT COLUMN: Content --- #}
         <div class="layout-content">
 
-          {# A. Carousel Banner #}
-          <div class="project-carousel reveal-up">
-
-            {# 1. The Track #}
+          {# A. CAROUSEL #}
+          {% set carousel_section = project.sections | selectattr('type', 'equalto', 'carousel') | first %}
+          {% if carousel_section %}
+          <div id="{{ carousel_section.id }}" class="project-carousel reveal-up scroll-spy-target">
             <div class="carousel-track-container">
               <ul class="carousel-track">
-                {% if project.images and project.images|length > 0 %}
+                {% if project.images %}
                   {% for img in project.images %}
                   <li class="carousel-slide {% if loop.first %}current-slide{% endif %}">
-                    <img src="{{ img }}" alt="{{ project.title }} Screenshot {{ loop.index }}">
+                    <img src="{{ img }}" alt="{{ project.title }} - {{ carousel_section.title }}">
                   </li>
                   {% endfor %}
                 {% else %}
-                  {# Fallback if no images #}
                   <li class="carousel-slide current-slide">
                     <div class="carousel-placeholder">No Preview Available</div>
                   </li>
                 {% endif %}
               </ul>
             </div>
-
-            {# 2. Controls (Only show if > 1 image) #}
             {% if project.images and project.images|length > 1 %}
-            <button class="carousel-btn btn--left is-hidden">
-              <i data-lucide="chevron-left"></i>
-            </button>
-            <button class="carousel-btn btn--right">
-              <i data-lucide="chevron-right"></i>
-            </button>
-
-            {# 3. Dots Navigation #}
+            <button class="carousel-btn btn--left" data-cursor-ignore><i data-lucide="chevron-left"></i></button>
+            <button class="carousel-btn btn--right" data-cursor-ignore><i data-lucide="chevron-right"></i></button>
             <div class="carousel-nav">
               {% for img in project.images %}
-              <button class="carousel-indicator {% if loop.first %}current-slide{% endif %}" aria-label="Go to slide {{ loop.index }}"></button>
+              <button class="carousel-indicator {% if loop.first %}current-slide{% endif %}" data-cursor-ignore></button>
               {% endfor %}
             </div>
             {% endif %}
-
           </div>
+          {% endif %}
 
-          {# B. Meta Grid (Cards) #}
-          <div class="project-meta-grid">
-
-            {# Card 1: Tech Stack #}
+          {# B. META GRID #}
+          <div class="project-meta-grid reveal-up">
             <div class="meta-card">
               <h4 class="meta-label">Technologies</h4>
               <div class="tech-stack-row">
@@ -82,89 +70,109 @@
                 {% endfor %}
               </div>
             </div>
-
-            {# Card 2: Buttons (With Title) #}
             <div class="meta-card actions-card">
-              <h4 class="meta-label">Project Links</h4> {# <--- Title Added Here #}
+              <h4 class="meta-label">Project Links</h4>
               <div class="meta-actions">
                 {% if project.live_url %}
-                <a href="{{ project.live_url }}" target="_blank" rel="noopener" class="btn-main full-width-btn">
+                <a href="{{ project.live_url }}" target="_blank" class="btn-main full-width-btn">
                   <i data-lucide="external-link"></i> Visit Live Website
                 </a>
                 {% endif %}
-
                 {% if project.code_url %}
-                <a href="{{ project.code_url }}" target="_blank" rel="noopener noreferrer" class="btn-secondary full-width-btn">
+                <a href="{{ project.code_url }}" target="_blank" class="btn-secondary full-width-btn">
                   <i data-lucide="github"></i> View Source Code
                 </a>
                 {% endif %}
               </div>
             </div>
-
           </div>
 
-          {# C. Text Content #}
+          {# C. TEXT SECTIONS #}
           <div class="content-body">
-            <section id="overview" class="text-block scroll-spy-target">
-              <h3>Overview</h3>
-              <p>{{ project.overview }}</p>
-            </section>
+            {% if project.sections %}
+              {% for section in project.sections %}
+                {% if section.type != 'carousel' %}
 
-            <section id="problem" class="text-block scroll-spy-target">
-              <h3>The Problem</h3>
-              <p>{{ project.problem }}</p>
-            </section>
+                  {# --- GROUP (Parent + Subsections) --- #}
+                  {% if section.type == 'group' %}
+                    {# 1. Main Heading for the Group #}
+                    <div id="{{ section.id }}" class="group-header scroll-spy-target reveal-up">
+                      <h2>{{ section.title }}</h2>
+                    </div>
+                    {# 2. Subsections #}
+                    {% for sub in section.subsections %}
+                      <section id="{{ sub.id }}" class="text-block scroll-spy-target reveal-up">
+                        <h3>{{ sub.title }}</h3>
+                        <p>{{ sub.content }}</p>
+                      </section>
+                    {% endfor %}
 
-            <section id="solution" class="text-block scroll-spy-target">
-              <h3>The Solution</h3>
-              <p>{{ project.solution }}</p>
-            </section>
+                  {# --- TEXT --- #}
+                  {% elif section.type == 'text' %}
+                    <section id="{{ section.id }}" class="text-block scroll-spy-target reveal-up">
+                      <h3>{{ section.title }}</h3>
+                      <p>{{ section.content }}</p>
+                    </section>
 
-            {% if project.features %}
-            <section id="features" class="text-block scroll-spy-target">
-              <h3>Key Features</h3>
-              <ul class="feature-list-simple">
-                {% for f in project.features %}
-                <li><i data-lucide="check"></i> {{ f }}</li>
-                {% endfor %}
-              </ul>
-            </section>
-            {% endif %}
+                  {# --- LIST --- #}
+                  {% elif section.type == 'list' %}
+                    <section id="{{ section.id }}" class="text-block scroll-spy-target reveal-up">
+                      <h3>{{ section.title }}</h3>
+                      <ul class="feature-list-simple">
+                        {% for item in section.content_items %}
+                        <li><i data-lucide="check"></i> {{ item }}</li>
+                        {% endfor %}
+                      </ul>
+                    </section>
 
-            {% if project.challenges %}
-            <section id="challenges" class="text-block scroll-spy-target">
-              <h3>Technical Challenges</h3>
-              <div class="challenges-grid">
-                {% for c in project.challenges %}
-                <div class="challenge-card">
-                  <h4>{{ c.title }}</h4>
-                  <p>{{ c.desc }}</p>
-                </div>
-                {% endfor %}
-              </div>
-            </section>
+                  {# --- GRID --- #}
+                  {% elif section.type == 'grid' %}
+                    <section id="{{ section.id }}" class="text-block scroll-spy-target reveal-up">
+                      <h3>{{ section.title }}</h3>
+                      <div class="challenges-grid">
+                        {% for item in section.content_items %}
+                        <div class="challenge-card">
+                          <h4>{{ item.title }}</h4>
+                          <p>{{ item.desc }}</p>
+                        </div>
+                        {% endfor %}
+                      </div>
+                    </section>
+
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
             {% endif %}
           </div>
         </div>
 
-        {# --- RIGHT COLUMN: TOC Sidebar --- #}
+        {# --- RIGHT COLUMN: Sidebar (Sticky & Rail) --- #}
         <aside class="layout-sidebar">
           <div class="sticky-wrapper">
             <div class="sidebar-module">
               <h4 class="sidebar-label">On this page</h4>
               <nav class="toc-nav">
-                <svg class="toc-circuit-svg" width="40" height="100%">
-                  <path class="circuit-track" d="" fill="none" stroke-width="2" />
-                  <path class="circuit-fill" d="" fill="none" stroke-width="2" />
+                <svg class="toc-rail-svg" width="40" height="100%">
+                  <path class="rail-track" />
+                  <path class="rail-fill" />
                 </svg>
 
                 <div class="toc-links-wrapper">
-                  {# Added data-cursor-ignore to disable the ring effect #}
-                  <a href="#overview" class="toc-link" data-cursor-ignore>Overview</a>
-                  <a href="#problem" class="toc-link" data-cursor-ignore>The Problem</a>
-                  <a href="#solution" class="toc-link" data-cursor-ignore>The Solution</a>
-                  {% if project.features %}<a href="#features" class="toc-link" data-cursor-ignore>Key Features</a>{% endif %}
-                  {% if project.challenges %}<a href="#challenges" class="toc-link" data-cursor-ignore>Challenges</a>{% endif %}
+                  {% if project.sections %}
+                    {% for section in project.sections %}
+                      {% if section.type == 'group' %}
+                        {# Parent #}
+                        <a href="#{{ section.id }}" class="toc-link is-parent" data-cursor-ignore>{{ section.title }}</a>
+                        {# Children #}
+                        {% for sub in section.subsections %}
+                          <a href="#{{ sub.id }}" class="toc-link is-child" data-cursor-ignore>{{ sub.title }}</a>
+                        {% endfor %}
+                      {% else %}
+                        {# Standard #}
+                        <a href="#{{ section.id }}" class="toc-link is-parent" data-cursor-ignore>{{ section.title }}</a>
+                      {% endif %}
+                    {% endfor %}
+                  {% endif %}
                 </div>
               </nav>
             </div>
@@ -172,51 +180,29 @@
         </aside>
 
       </div>
-
-      {# --- 4. Project Navigation (Previous / Next) --- #}
+                {# Navigation #}
           <nav class="project-navigation reveal-up">
-
-            {# Previous Project (Left Side) #}
             {% if prev_project %}
             <a href="{{ url_for('portfolio.project_detail', project_id=prev_project.id) }}" class="nav-card prev">
-              <div class="nav-icon">
-                <i data-lucide="arrow-left"></i>
-              </div>
+              <div class="nav-icon"><i data-lucide="arrow-left"></i></div>
               <div class="nav-info">
                 <span class="nav-label">Previous Project</span>
                 <span class="nav-title">{{ prev_project.title }}</span>
               </div>
             </a>
-            {% else %}
-            {# Empty spacer to keep Next button on the right side if there is no previous #}
-            <div class="nav-spacer"></div>
-            {% endif %}
-
-            {# Next Project (Right Side) #}
+            {% else %}<div class="nav-spacer"></div>{% endif %}
             {% if next_project %}
             <a href="{{ url_for('portfolio.project_detail', project_id=next_project.id) }}" class="nav-card next">
               <div class="nav-info">
                 <span class="nav-label">Next Project</span>
                 <span class="nav-title">{{ next_project.title }}</span>
               </div>
-              <div class="nav-icon">
-                <i data-lucide="arrow-right"></i>
-              </div>
+              <div class="nav-icon"><i data-lucide="arrow-right"></i></div>
             </a>
             {% endif %}
-
           </nav>
 
     </div>
   </article>
 
-{% endblock %}
-
-{% block scripts %}
-  {{ super() }}
-  <script>
-    if (typeof lucide !== 'undefined' && lucide.createIcons) {
-      lucide.createIcons();
-    }
-  </script>
 {% endblock %}
