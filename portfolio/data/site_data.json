@@ -11,6 +11,11 @@
     "content": "I’m an <strong>M.Sc. Computer Science graduate</strong> passionate about building impactful software. Beyond academics, I expand my skills through hands-on coding and practical projects.<br><br>Curious and driven, I am ready to deliver purpose-driven code as a professional developer.",
     "status": "Open to Work"
   },
+  "socials": [
+    { "name": "Email", "url": "mailto:muthu@example.com", "icon": "mail", "handle": "muthu@example.com" },
+    { "name": "LinkedIn", "url": "https://linkedin.com/in/yourprofile", "icon": "linkedin", "handle": "@muthukumaran" },
+    { "name": "GitHub", "url": "https://github.com/muthu17ks", "icon": "github", "handle": "@muthu17ks" }
+  ],
   "tech_stack": [
     { "name": "Python", "icon": "devicon-python-plain colored" },
     { "name": "JavaScript", "icon": "devicon-javascript-plain colored" },

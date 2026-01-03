@@ -21,31 +21,61 @@
     </button>
 
     <nav id="navbar-menu" class="navbar__menu" aria-label="Main Navigation">
-      {#
-         LOGIC:
-         If is_home is true -> use '#section' (Smooth Scroll)
-         Else -> use 'home_url/#section' (Redirect back to home section)
-      #}
-
       <a href="{{ '#main' if is_home else home_url ~ '#main' }}" class="nav-link">Home</a>
-
       <a href="{{ '#about' if is_home else home_url ~ '#about' }}" class="nav-link">About</a>
-
-      {# Note: On the projects page, you might want this to stay on the projects page,
-         OR go back to the featured projects section. I've set it to go back to home section. #}
       <a href="{{ '#projects' if is_home else home_url ~ '#projects' }}" class="nav-link">Projects</a>
-
       <a href="{{ '#awards' if is_home else home_url ~ '#awards' }}" class="nav-link">Awards</a>
-
       <a href="{{ '#contact' if is_home else home_url ~ '#contact' }}" class="nav-link">Contact</a>
     </nav>
+
+    <button id="cp-trigger" class="navbar__glass-btn search-btn" aria-label="Search Commands (Cmd+K)">
+      <i data-lucide="command" class="icon-desktop"></i>
+      <i data-lucide="search" class="icon-mobile"></i>
+      <span class="btn-text-mobile">Search</span>
+    </button>
 
     <button id="theme-toggle" class="navbar__theme-toggle" aria-label="Switch Color Theme">
       <i data-lucide="sun" aria-hidden="true"></i>
     </button>
   </div>
 
-  {# Fix the 'Hire Me' button too #}
   <a href="{{ '#contact' if is_home else home_url ~ '#contact' }}" class="navbar__cta">Hire Me</a>
 
 </header>
+
+<div id="cp-modal" class="cp-modal" aria-hidden="true">
+  <div class="cp-backdrop"></div>
+  <div class="cp-container">
+    <div class="cp-header">
+      <div class="cp-input-group">
+        <i data-lucide="search" class="cp-search-icon"></i>
+        <input type="text" id="cp-input" placeholder="Type a command or search..." autocomplete="off">
+      </div>
+      <div class="cp-header-actions">
+        <button class="cp-action-btn" id="cp-theme-btn" aria-label="Toggle Theme">
+          <i data-lucide="sun"></i>
+        </button>
+        <button class="cp-action-btn" id="cp-close-btn"><i data-lucide="x"></i></button>
+      </div>
+    </div>
+
+    <div class="cp-body" id="cp-results">
+      </div>
+
+    <div class="cp-footer">
+      <div class="cp-hint-group desktop-only">
+        <span class="cp-key"><i data-lucide="arrow-up" style="width:10px;"></i></span>
+        <span class="cp-key"><i data-lucide="arrow-down" style="width:10px;"></i></span>
+        <span>to navigate</span>
+      </div>
+      <div class="cp-hint-group desktop-only">
+        <span class="cp-key">↵</span>
+        <span>to select</span>
+      </div>
+       <div class="cp-hint-group desktop-only">
+        <span class="cp-key">Esc</span>
+        <span>to close</span>
+      </div>
+    </div>
+  </div>
+</div>

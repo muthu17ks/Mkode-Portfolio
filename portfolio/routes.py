@@ -7,6 +7,7 @@ Handles all URL routing for the portfolio, including:
 - Resume downloads
 - Contact form submissions via SMTP
 - Project detail views
+- API for Command Palette
 """
 
 import os
@@ -34,7 +35,6 @@ SITE_DATA_JSON = DATA_DIR / "site_data.json"
 def load_json_data(path, default=None):
     """
     Safely loads JSON data from a given path.
-    Returns the default value if the file is missing or corrupt.
     """
     if default is None:
         default = []
@@ -50,20 +50,14 @@ def load_json_data(path, default=None):
 
 @portfolio_bp.route("/", methods=["GET"])
 def home():
-    """
-    Renders the homepage.
-    Selects up to 3 featured projects for the hero section.
-    """
+    """Renders the homepage."""
     projects = load_json_data(PROJECTS_JSON, default=[])
     site_data = load_json_data(SITE_DATA_JSON, default={})
 
-    # Prioritize projects marked as 'featured'
     featured = [p for p in projects if p.get("featured")]
-
     if len(featured) >= 3:
         featured_main = featured[:3]
     else:
-        # Fallback: Fill remaining spots with unique top projects
         seen = set()
         top = []
         for p in featured + projects:
@@ -92,35 +86,17 @@ def all_projects():
 
 @portfolio_bp.route("/project/<project_id>", methods=["GET"])
 def project_detail(project_id):
-    """
-    Renders the dedicated project detail page.
-    Handles 'pipelined' navigation via the ?from= query parameter.
-    Calculates Previous/Next projects for footer navigation using the single list.
-    """
-    # 1. Load ALL projects from the single source
+    """Renders the dedicated project detail page."""
     projects = load_json_data(PROJECTS_JSON, default=[])
-
-    # 2. Find the specific project
     project = next((p for p in projects if p["id"] == project_id), None)
 
     if not project:
         abort(404)
 
-    # 3. Calculate Previous and Next
     current_index = projects.index(project)
+    prev_project = projects[current_index - 1] if current_index > 0 else None
+    next_project = projects[current_index + 1] if current_index < len(projects) - 1 else None
 
-    prev_project = None
-    next_project = None
-
-    # Previous: If index > 0, get item at index-1
-    if current_index > 0:
-        prev_project = projects[current_index - 1]
-
-    # Next: If index < last index, get item at index+1
-    if current_index < len(projects) - 1:
-        next_project = projects[current_index + 1]
-
-    # 4. Handle Back Button Logic
     referrer = request.args.get("from")
     if referrer == "home":
         back_url = url_for("portfolio.home") + "#projects"
@@ -144,9 +120,7 @@ def project_detail(project_id):
 
 @portfolio_bp.route("/download-resume", methods=["GET"])
 def download_resume():
-    """
-    Serves the resume PDF for download.
-    """
+    """Serves the resume PDF (Opens in Browser)."""
     filename = "muthukumaran-resume.pdf"
     resume_path = Path(__file__).parent / "static" / "files" / filename
 
@@ -156,7 +130,7 @@ def download_resume():
 
     return send_file(
         resume_path,
-        as_attachment=True,
+        as_attachment=False,  # Changed to False to open in browser
         mimetype="application/pdf",
         download_name=filename
     )
@@ -164,45 +138,29 @@ def download_resume():
 
 @portfolio_bp.route("/contact", methods=["POST"])
 def contact():
-    """
-    Handles AJAX contact form submissions.
-    Validates input and sends email via Flask-Mail.
-    """
-    # 1. Extract and sanitize input
+    """Handles contact form submissions."""
     name = (request.form.get("name") or "").strip()
     email = (request.form.get("email") or "").strip()
     message = (request.form.get("message") or "").strip()
 
     email_regex = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
-    # 2. Validate input
     errors = []
-    if not name:
-        errors.append("Please enter your name.")
-    if not email:
-        errors.append("Please enter your email address.")
-    elif not email_regex.match(email):
-        errors.append("Please enter a valid email address.")
-    if not message:
-        errors.append("Please enter a message.")
-    elif len(message) < 10:
-        errors.append("Message is too short — please write a few more words.")
+
+    if not name: errors.append("Please enter your name.")
+    if not email: errors.append("Please enter your email address.")
+    elif not email_regex.match(email): errors.append("Please enter a valid email address.")
+    if not message: errors.append("Please enter a message.")
+    elif len(message) < 10: errors.append("Message is too short.")
 
     if errors:
         return jsonify({"status": "error", "message": errors[0]}), 400
 
-    # 3. Check Mail Configuration
     recipient = os.getenv("MAIL_RECIPIENT") or current_app.config.get("MAIL_RECIPIENT")
     mail = getattr(current_app, "mail", None) or current_app.extensions.get("mail")
 
     if not recipient or not mail:
-        current_app.logger.error("Mail configuration missing.")
-        return jsonify({
-            "status": "error",
-            "message": "System configuration error. Please try again later."
-        }), 500
+        return jsonify({"status": "error", "message": "System configuration error."}), 500
 
-    # 4. Construct and Send Email
     msg = Message(
         subject=f"Portfolio Contact from {name}",
         sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
@@ -216,7 +174,70 @@ def contact():
         return jsonify({"status": "success", "message": "Message sent successfully!"}), 200
     except Exception:
         current_app.logger.exception("Failed to send email")
-        return jsonify({
-            "status": "error",
-            "message": "Failed to send email. Please try again later."
-        }), 500
+        return jsonify({"status": "error", "message": "Failed to send email."}), 500
+
+
+@portfolio_bp.route("/api/search-data", methods=["GET"])
+def get_search_data():
+    """
+    API endpoint for Command Palette.
+    Returns structured data for Pages, Projects, Socials, etc.
+    """
+    projects_data = load_json_data(PROJECTS_JSON, default=[])
+    site_data = load_json_data(SITE_DATA_JSON, default={})
+
+    # 1. Pages (Dynamic URL generation)
+    pages = [
+        {"id": "home", "title": "Home", "desc": "Go to Homepage", "url": url_for('portfolio.home'), "icon": "home", "group": "Pages"},
+        {"id": "about", "title": "About", "desc": "Read my story", "url": url_for('portfolio.home') + "#about", "icon": "user", "group": "Pages"},
+        {"id": "projects_section", "title": "Featured Projects", "desc": "View highlighted work", "url": url_for('portfolio.home') + "#projects", "icon": "star", "group": "Pages"},
+        {"id": "all_projects", "title": "All Projects Archive", "desc": "View full project list", "url": url_for('portfolio.all_projects'), "icon": "archive", "group": "Pages"},
+        {"id": "awards", "title": "Awards", "desc": "Honors & Certifications", "url": url_for('portfolio.home') + "#awards", "icon": "award", "group": "Pages"},
+        {"id": "contact", "title": "Contact", "desc": "Get in touch", "url": url_for('portfolio.home') + "#contact", "icon": "mail", "group": "Pages"},
+    ]
+
+    # 2. Top 3 Projects
+    top_projects = []
+    # Sort by featured first, then grab top 3
+    sorted_projects = sorted(projects_data, key=lambda x: x.get('featured', False), reverse=True)
+    for p in sorted_projects[:3]:
+        top_projects.append({
+            "id": f"proj_{p['id']}",
+            "title": p['title'],
+            "desc": p.get('role', 'Project'),
+            "url": url_for('portfolio.project_detail', project_id=p['id']),
+            "icon": "zap",
+            "group": "Top Projects"
+        })
+
+    # 3. Connect (Socials)
+    socials = []
+    if "socials" in site_data:
+        for s in site_data["socials"]:
+            socials.append({
+                "id": f"soc_{s['name']}",
+                "title": s['name'],
+                "desc": s.get('handle', 'Connect'),
+                "url": s['url'],
+                "icon": s.get('icon', 'link'),
+                "group": "Connect",
+                "external": True
+            })
+
+    # 4. Resume
+    resume = [{
+        "id": "resume",
+        "title": "View Resume",
+        "desc": "Open PDF in Browser",
+        "url": url_for('portfolio.download_resume'),
+        "icon": "external-link",
+        "group": "Resume",
+        "external": True
+    }]
+
+    return jsonify({
+        "pages": pages,
+        "projects": top_projects,
+        "connect": socials,
+        "resume": resume
+    })

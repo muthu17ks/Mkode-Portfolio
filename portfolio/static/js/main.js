@@ -1,5 +1,6 @@
 /**
- * Main Application Script
+ * Main Application Script (Fully Updated)
+ * Includes: Theme Picker, Navbar, Dynamic Command Palette, Fixed Custom Cursor, Animations
  */
 'use strict';
 
@@ -77,7 +78,6 @@
 
   function applyPalette(colors) {
     const vars = ['--p', '--s', '--t', '--n'];
-
     updateMetaThemeColor(colors[0]);
 
     colors.forEach((hex, index) => {
@@ -125,12 +125,10 @@
     grid.innerHTML = '';
 
     const current = JSON.parse(localStorage.getItem('custom-palette')) || DEFAULT_PALETTE;
-
     const others = PALETTE_LIBRARY
         .filter(p => JSON.stringify(p) !== JSON.stringify(current))
         .sort(() => 0.5 - Math.random())
         .slice(0, 3);
-
     const displayList = [current, ...others];
 
     displayList.forEach(colors => {
@@ -173,13 +171,25 @@
   root.classList.add(savedTheme === 'dark' ? 'dark-theme' : 'light-theme');
   applyPalette(savedPalette);
 
-  function updateIcon(theme) {
-    if (!toggleBtn) return;
-    toggleBtn.innerHTML = theme === 'dark'
-      ? '<i data-lucide="moon"></i>'
-      : '<i data-lucide="sun"></i>';
+function updateIcon(theme) {
+    // 1. Update Main Navbar Toggle
+    if (toggleBtn) {
+      toggleBtn.innerHTML = theme === 'dark'
+        ? '<i data-lucide="moon"></i>'
+        : '<i data-lucide="sun"></i>';
+    }
+
+    // 2. Update Command Palette Toggle (SYNC FIX)
+    const cpThemeBtn = document.getElementById('cp-theme-btn');
+    if (cpThemeBtn) {
+        cpThemeBtn.innerHTML = theme === 'dark'
+          ? '<i data-lucide="moon"></i>'
+          : '<i data-lucide="sun"></i>';
+    }
+
+    // Refresh Icons
     if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-  }
+}
   updateIcon(savedTheme);
 
   if (toggleBtn) {
@@ -219,10 +229,10 @@
   const navMenu = document.querySelector('.navbar__menu');
   const mobileBtn = document.getElementById('mobile-menu-btn');
   const mobileBtnText = mobileBtn ? mobileBtn.querySelector('.btn-text') : null;
-
   const allNavLinks = document.querySelectorAll('a[href^="#"]');
   const sections = Array.from(document.querySelectorAll('section[id]'));
 
+  // Mobile Menu Logic (Currently hidden via CSS but kept for compatibility)
   if (mobileBtn && navMenu) {
     mobileBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -238,29 +248,19 @@
     });
   }
 
-document.addEventListener('click', (ev) => {
+  document.addEventListener('click', (ev) => {
     const el = ev.target.closest('a[href^="#"]');
     if (!el) return;
-
-    ev.preventDefault();
     el.blur();
-
     const href = el.getAttribute('href');
-
     if (navMenu && navMenu.classList.contains('is-open')) {
       navMenu.classList.remove('is-open');
       if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'false');
     }
-
-    const target = document.querySelector(href);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
-      history.pushState(null, '', href);
-    }
   });
+
   function updateActiveState() {
     let current = null;
-
     if (window.scrollY < 100) {
        current = '#main';
     } else {
@@ -281,7 +281,7 @@ document.addEventListener('click', (ev) => {
     });
 
     if (current) {
-        const activeLinks = document.querySelectorAll(`a[href="${current}"]`);
+        const activeLinks = document.querySelectorAll(`a[href*="${current}"]`);
         activeLinks.forEach(link => {
             link.classList.add('is-active');
             link.setAttribute('aria-current', 'page');
@@ -295,7 +295,6 @@ document.addEventListener('click', (ev) => {
   }
 
   window.addEventListener('scroll', updateActiveState, { passive: true });
-
   window.addEventListener('load', () => {
     if (location.hash) {
       const target = document.querySelector(location.hash);
@@ -311,75 +310,245 @@ document.addEventListener('click', (ev) => {
   });
 })();
 
-/* 3. Back-To-Top Utility */
-(function () {
-  const btn = document.getElementById('to-top');
-  if (!btn) return;
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* 3. Command Palette System (Dynamic & Data-Driven) */
+(function() {
+  const triggerBtn = document.getElementById('cp-trigger');
+  const modal = document.getElementById('cp-modal');
+  const input = document.getElementById('cp-input');
+  const resultsContainer = document.getElementById('cp-results');
+  const backdrop = document.querySelector('.cp-backdrop');
+  const closeBtn = document.getElementById('cp-close-btn');
+  const themeBtn = document.getElementById('cp-theme-btn');
 
-  function onScroll() {
-    if (window.scrollY > 200) btn.classList.add('to-top--visible');
-    else btn.classList.remove('to-top--visible');
+  if (!modal || !input) return;
+
+  let allData = null;
+  let isOpen = false;
+  let selectedIndex = 0;
+  let filteredCommands = [];
+  const MAX_RECENTS = 3;
+
+  // --- 1. Data Fetching ---
+  async function fetchData() {
+    try {
+      const res = await fetch('/api/search-data');
+      if (!res.ok) throw new Error('Failed to fetch');
+      allData = await res.json();
+    } catch (err) {
+      console.error(err);
+      // Fallback
+      allData = { pages: [], projects: [], connect: [], resume: [] };
+    }
   }
-  window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const behavior = (reduceMotion || window.innerWidth < 1024) ? 'auto' : 'smooth';
-    window.scrollTo({ top: 0, behavior: behavior });
-  });
-})();
 
-/* 4. Scroll Reveal Animations */
-(function () {
-  if (window.innerWidth < 1024) return;
+  // --- 2. Recent Items Logic ---
+  function getRecents() {
+    try {
+      return JSON.parse(localStorage.getItem('cp_recents')) || [];
+    } catch { return []; }
+  }
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduceMotion) return;
+  function addRecent(item) {
+    let recents = getRecents();
+    recents = recents.filter(r => r.id !== item.id); // Remove dupe
+    recents.unshift(item); // Add to top
+    if (recents.length > MAX_RECENTS) recents = recents.slice(0, MAX_RECENTS);
+    localStorage.setItem('cp_recents', JSON.stringify(recents));
+  }
 
-  const autoAnimConfig = [
-    { sel: '.hero__title', cls: 'reveal-up' },
-    { sel: '.hero__role', cls: 'reveal-up', delay: 'delay-100' },
-    { sel: '.hero__blurb', cls: 'reveal-up', delay: 'delay-200' },
-    { sel: '.hero__cta', cls: 'reveal-up', delay: 'delay-300' },
-    { sel: '.hero__avatar', cls: 'reveal-in', delay: 'delay-300' },
-    { sel: '.section-title', cls: 'reveal-up' },
-    { sel: '.section-subtitle, .section-description', cls: 'reveal-up', delay: 'delay-100' },
-    { sel: '.about__story', cls: 'reveal-up', delay: 'delay-200' },
-    { sel: '.about__visual', cls: 'reveal-in', delay: 'delay-200' },
-    { sel: '.tech-item', cls: 'reveal-in', stagger: 50 },
-    { sel: '.award-card', cls: 'reveal-up', stagger: 100 },
-    { sel: '.contact-layout', cls: 'reveal-up' },
-  ];
+  function removeRecent(id, e) {
+    if (e) e.stopPropagation();
+    let recents = getRecents();
+    recents = recents.filter(r => r.id !== id);
+    localStorage.setItem('cp_recents', JSON.stringify(recents));
+    filterCommands(input.value); // Re-render
+  }
 
-  autoAnimConfig.forEach((config) => {
-    const elements = document.querySelectorAll(config.sel);
-    elements.forEach((el, index) => {
-      el.classList.add(config.cls);
-      if (config.delay) el.classList.add(config.delay);
-      if (config.stagger) el.style.transitionDelay = `${index * config.stagger}ms`;
+  function clearRecents() {
+    localStorage.removeItem('cp_recents');
+    filterCommands(input.value); // Re-render
+  }
+
+  // --- 3. Open/Close Logic ---
+  async function openPalette() {
+    isOpen = true;
+    modal.classList.add('is-open');
+    document.body.classList.add('is-modal-open'); // Signals Cursor Logic to Reset
+
+    if (!allData) await fetchData();
+
+    input.value = '';
+    filterCommands('');
+    setTimeout(() => input.focus(), 100);
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePalette() {
+    isOpen = false;
+    modal.classList.remove('is-open');
+    document.body.classList.remove('is-modal-open');
+    document.body.style.overflow = '';
+  }
+
+  // --- 4. Filtering & Rendering ---
+  function filterCommands(query) {
+    const q = query.toLowerCase().trim();
+
+    if (q === '') {
+      // DEFAULT VIEW
+      const recents = getRecents().map(r => ({ ...r, group: 'Recent' }));
+      filteredCommands = [
+        ...recents,
+        ...allData.pages,
+        ...allData.projects,
+        ...allData.connect,
+        ...allData.resume
+      ];
+    } else {
+      // SEARCH VIEW
+      const pool = [
+        ...allData.pages,
+        ...allData.projects,
+        ...allData.connect,
+        ...allData.resume
+      ];
+      filteredCommands = pool.filter(item =>
+        item.title.toLowerCase().includes(q) ||
+        item.desc.toLowerCase().includes(q)
+      );
+    }
+
+    selectedIndex = 0;
+    renderCommands(q === '');
+  }
+
+  function renderCommands(isDefaultView) {
+    resultsContainer.innerHTML = '';
+
+    if (filteredCommands.length === 0) {
+      resultsContainer.innerHTML = `<div style="padding:20px; text-align:center; color:var(--about-text-muted); font-size:13px;">No results found.</div>`;
+      return;
+    }
+
+    const groups = {};
+    // Ensure order is correct
+    const groupOrder = ['Recent', 'Pages', 'Top Projects', 'Connect', 'Resume'];
+
+    filteredCommands.forEach(cmd => {
+      if (!groups[cmd.group]) groups[cmd.group] = [];
+      groups[cmd.group].push(cmd);
     });
-  });
 
-  const projects = document.querySelectorAll('.project-card');
-  projects.forEach((el) => {
-    el.classList.add('reveal-up');
-  });
+    groupOrder.forEach(groupName => {
+      const items = groups[groupName];
+      if (!items || items.length === 0) return;
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-revealed');
-        observer.unobserve(entry.target);
+      const header = document.createElement('div');
+      header.className = 'cp-group-header';
+
+      let titleHtml = `<span class="cp-group-title">${groupName}</span>`;
+      if (groupName === 'Recent') {
+        titleHtml += `<button class="cp-clear-all-btn">Clear</button>`;
       }
-    });
-  }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
 
-  const animatedElements = document.querySelectorAll('.reveal-up, .reveal-in, .reveal-from-left, .reveal-from-right');
-  animatedElements.forEach((el) => observer.observe(el));
+      header.innerHTML = titleHtml;
+      resultsContainer.appendChild(header);
+
+      if (groupName === 'Recent') {
+        header.querySelector('.cp-clear-all-btn').addEventListener('click', clearRecents);
+      }
+
+      items.forEach((item, index) => {
+        const globalIndex = filteredCommands.indexOf(item);
+        const div = document.createElement('div');
+        div.className = `cp-item ${globalIndex === selectedIndex ? 'is-selected' : ''}`;
+
+        let deleteBtnHtml = '';
+        if (groupName === 'Recent') {
+          deleteBtnHtml = `<button class="cp-delete-btn" title="Remove from history"><i data-lucide="x"></i></button>`;
+        }
+
+        div.innerHTML = `
+          <i data-lucide="${item.icon}" class="cp-item-icon"></i>
+          <div class="cp-info">
+            <span class="cp-title">${item.title}</span>
+            <span class="cp-desc">${item.desc}</span>
+          </div>
+          ${deleteBtnHtml}
+        `;
+
+        div.addEventListener('click', () => executeCommand(item));
+        div.addEventListener('mouseenter', () => {
+          selectedIndex = globalIndex;
+          document.querySelectorAll('.cp-item').forEach(el => el.classList.remove('is-selected'));
+          div.classList.add('is-selected');
+        });
+
+        if (groupName === 'Recent') {
+          div.querySelector('.cp-delete-btn').addEventListener('click', (e) => removeRecent(item.id, e));
+        }
+
+        resultsContainer.appendChild(div);
+      });
+    });
+
+    if (window.lucide) window.lucide.createIcons();
+    scrollToSelected();
+  }
+
+  function scrollToSelected() {
+    const selectedEl = resultsContainer.querySelector('.is-selected');
+    if (selectedEl) selectedEl.scrollIntoView({ block: 'nearest' });
+  }
+
+  function executeCommand(cmd) {
+    addRecent(cmd);
+    if (cmd.external) {
+      window.open(cmd.url, '_blank');
+    } else {
+      window.location.href = cmd.url;
+    }
+    closePalette();
+  }
+
+  // Event Listeners
+  if (triggerBtn) triggerBtn.addEventListener('click', openPalette);
+  if (closeBtn) closeBtn.addEventListener('click', closePalette);
+  if (backdrop) backdrop.addEventListener('click', closePalette);
+  if (themeBtn) themeBtn.addEventListener('click', () => {
+      document.getElementById('theme-toggle').click();
+      input.focus();
+  });
+
+  input.addEventListener('input', (e) => filterCommands(e.target.value));
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex + 1) % filteredCommands.length;
+      renderCommands(input.value === '');
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex - 1 + filteredCommands.length) % filteredCommands.length;
+      renderCommands(input.value === '');
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filteredCommands[selectedIndex]) executeCommand(filteredCommands[selectedIndex]);
+    } else if (e.key === 'Escape') {
+      closePalette();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      if (isOpen) closePalette();
+      else openPalette();
+    }
+  });
 })();
 
-/* 5. Custom Cursor (Capability Aware) */
+/* 4. Custom Cursor (FIXED: Reset on Modal Open) */
 (function () {
   const dot = document.querySelector('.cursor__dot');
   const ring = document.querySelector('.cursor__ring');
@@ -409,10 +578,8 @@ document.addEventListener('click', (ev) => {
   function startCursor() {
     if (isCursorActive) return;
     isCursorActive = true;
-
     dot.style.display = 'block';
     ring.style.display = 'block';
-
     window.addEventListener('mousemove', onMouseMove);
     attachCursorListeners();
     requestAnimationFrame(loop);
@@ -423,7 +590,6 @@ document.addEventListener('click', (ev) => {
     dot.style.display = 'none';
     ring.style.display = 'none';
     window.removeEventListener('mousemove', onMouseMove);
-
     if (lockedItem) {
       lockedItem.style.transform = '';
       lockedItem = null;
@@ -449,9 +615,7 @@ document.addEventListener('click', (ev) => {
   function shouldIgnore(el) {
     if (!el) return true;
     if (el.hasAttribute('data-cursor-ignore')) return true;
-
     if (el.classList.contains('action-badge')) return false;
-
     if (el.closest('.project-card__media')) return true;
     if (el.closest('.contact-form-wrapper')) {
       if (el.matches('input, textarea, select, label')) return true;
@@ -461,7 +625,6 @@ document.addEventListener('click', (ev) => {
 
   function attachCursorListeners() {
     if (!isCursorActive) return;
-
     const candidates = Array.from(document.querySelectorAll(interactiveSelectors))
       .filter((el) => !el.__cursorAttached && !shouldIgnore(el));
 
@@ -487,6 +650,27 @@ document.addEventListener('click', (ev) => {
   }
 
   function loop() {
+    // ---- CRITICAL FIX START: Force Reset if Modal is Open ----
+    if (document.body.classList.contains('is-modal-open')) {
+      if (lockedItem) {
+        lockedItem.style.transform = '';
+        lockedItem = null;
+        ring.classList.remove('is-locked');
+      }
+      ringX = mouseX;
+      ringY = mouseY;
+      dot.style.opacity = '0';
+      ring.style.opacity = '0';
+      requestAnimationFrame(loop);
+      return;
+    } else {
+        if(hasMoved) {
+            dot.style.opacity = '1';
+            ring.style.opacity = '1';
+        }
+    }
+    // ---- CRITICAL FIX END ----
+
     if (!isCursorActive) return;
     if (!hasMoved) { requestAnimationFrame(loop); return; }
 
@@ -546,7 +730,7 @@ document.addEventListener('click', (ev) => {
   }
 })();
 
-/* 6. Contact Form & Toasts */
+/* 5. Contact Form & Toasts */
 (function () {
   const form = document.querySelector('.contact-form');
   if (!form) return;
@@ -572,7 +756,6 @@ document.addEventListener('click', (ev) => {
     `;
 
     container.appendChild(toast);
-
     if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
 
     const removeToast = () => {
@@ -582,21 +765,15 @@ document.addEventListener('click', (ev) => {
     };
 
     toast.querySelector('.toast__close').addEventListener('click', removeToast);
-
-    if (type !== 'loading') {
-        setTimeout(removeToast, 5000);
-    }
-
+    if (type !== 'loading') setTimeout(removeToast, 5000);
     return { remove: removeToast };
   }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     submitBtn.disabled = true;
     submitBtn.style.cursor = 'not-allowed';
     submitBtn.innerHTML = `<i data-lucide="loader-2" class="spin-anim"></i> <span>Sending...</span>`;
-
     if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
 
     const loadingToast = showToast('Sending your message...', 'loading');
@@ -608,7 +785,6 @@ document.addEventListener('click', (ev) => {
           body: formData,
           headers: { 'X-Requested-With': 'XMLHttpRequest' }
       });
-
       const data = await response.json();
       if (loadingToast) loadingToast.remove();
 
@@ -630,134 +806,86 @@ document.addEventListener('click', (ev) => {
   });
 })();
 
-/* 7. Page Preloader & Smart Scroll */
+/* 6. Back-To-Top Utility */
+(function () {
+  const btn = document.getElementById('to-top');
+  if (!btn) return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function onScroll() {
+    if (window.scrollY > 200) btn.classList.add('to-top--visible');
+    else btn.classList.remove('to-top--visible');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const behavior = (reduceMotion || window.innerWidth < 1024) ? 'auto' : 'smooth';
+    window.scrollTo({ top: 0, behavior: behavior });
+  });
+})();
+
+/* 7. Scroll Reveal Animations */
+(function () {
+  if (window.innerWidth < 1024) return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+
+  const autoAnimConfig = [
+    { sel: '.hero__title', cls: 'reveal-up' },
+    { sel: '.hero__role', cls: 'reveal-up', delay: 'delay-100' },
+    { sel: '.hero__blurb', cls: 'reveal-up', delay: 'delay-200' },
+    { sel: '.hero__cta', cls: 'reveal-up', delay: 'delay-300' },
+    { sel: '.hero__avatar', cls: 'reveal-in', delay: 'delay-300' },
+    { sel: '.section-title', cls: 'reveal-up' },
+    { sel: '.section-subtitle, .section-description', cls: 'reveal-up', delay: 'delay-100' },
+    { sel: '.about__story', cls: 'reveal-up', delay: 'delay-200' },
+    { sel: '.about__visual', cls: 'reveal-in', delay: 'delay-200' },
+    { sel: '.tech-item', cls: 'reveal-in', stagger: 50 },
+    { sel: '.award-card', cls: 'reveal-up', stagger: 100 },
+    { sel: '.contact-layout', cls: 'reveal-up' },
+  ];
+
+  autoAnimConfig.forEach((config) => {
+    const elements = document.querySelectorAll(config.sel);
+    elements.forEach((el, index) => {
+      el.classList.add(config.cls);
+      if (config.delay) el.classList.add(config.delay);
+      if (config.stagger) el.style.transitionDelay = `${index * config.stagger}ms`;
+    });
+  });
+
+  const projects = document.querySelectorAll('.project-card');
+  projects.forEach((el) => {
+    el.classList.add('reveal-up');
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-revealed');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
+
+  const animatedElements = document.querySelectorAll('.reveal-up, .reveal-in, .reveal-from-left, .reveal-from-right');
+  animatedElements.forEach((el) => observer.observe(el));
+})();
+
+/* 8. Page Preloader */
 (function () {
   const preloader = document.getElementById('preloader');
   if (!preloader) return;
-
   const dismissPreloader = () => {
     preloader.classList.add('is-loaded');
-    setTimeout(() => {
-      preloader.style.display = 'none';
-    }, 650);
+    setTimeout(() => { preloader.style.display = 'none'; }, 650);
   };
-
-  window.addEventListener('load', () => {
-    setTimeout(dismissPreloader, 100);
-  });
-
+  window.addEventListener('load', () => { setTimeout(dismissPreloader, 100); });
   setTimeout(dismissPreloader, 5000);
 })();
 
-/* 10. Dynamic Rail Track Logic (Smooth Curves) */
-(function() {
-  const tocNav = document.querySelector('.toc-nav');
-  if (!tocNav) return;
-
-  const svg = tocNav.querySelector('.toc-rail-svg');
-  const trackPath = svg.querySelector('.rail-track');
-  const fillPath = svg.querySelector('.rail-fill');
-  const linksWrapper = tocNav.querySelector('.toc-links-wrapper');
-  const links = Array.from(linksWrapper.querySelectorAll('.toc-link'));
-
-  if (links.length === 0) return;
-
-  const parentX = 1;
-  const childX = 16;
-
-  let pathD = "";
-  let points = [];
-
-  links.forEach((link, index) => {
-    const isChild = link.classList.contains('is-child');
-    const targetX = isChild ? childX : parentX;
-
-    const linkCenterY = link.offsetTop + (link.offsetHeight / 2);
-
-    points.push({ x: targetX, y: linkCenterY });
-  });
-
-  if (points.length > 0) {
-    pathD += `M ${points[0].x} 0 `;
-    pathD += `L ${points[0].x} ${points[0].y} `;
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const p1 = points[i];
-      const p2 = points[i+1];
-
-      if (p1.x !== p2.x) {
-        const distY = p2.y - p1.y;
-        const cpY1 = p1.y + (distY * 0.5);
-        const cpY2 = p1.y + (distY * 0.5);
-
-        pathD += `C ${p1.x} ${cpY1}, ${p2.x} ${cpY2}, ${p2.x} ${p2.y} `;
-      } else {
-        pathD += `L ${p2.x} ${p2.y} `;
-      }
-    }
-
-    const lastP = points[points.length - 1];
-    pathD += `L ${lastP.x} ${linksWrapper.offsetHeight} `;
-  }
-
-  trackPath.setAttribute('d', pathD);
-  fillPath.setAttribute('d', pathD);
-
-  const totalLength = trackPath.getTotalLength();
-  fillPath.style.strokeDasharray = `${totalLength} ${totalLength}`;
-  fillPath.style.strokeDashoffset = totalLength;
-
-  const updateRail = () => {
-    const scrollPos = window.scrollY + 120;
-
-    let activeIndex = -1;
-    for (let i = 0; i < links.length; i++) {
-      const id = links[i].getAttribute('href');
-      const target = document.querySelector(id);
-
-      if (target) {
-        if (target.offsetTop <= scrollPos + 100) {
-          activeIndex = i;
-        }
-      }
-    }
-
-    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
-      activeIndex = links.length - 1;
-    }
-
-    links.forEach((l, i) => {
-      if (i === activeIndex) l.classList.add('is-active');
-      else l.classList.remove('is-active');
-    });
-
-    if (activeIndex >= 0) {
-      const activePoint = points[activeIndex];
-      const percent = activePoint.y / linksWrapper.offsetHeight;
-
-      const isLastItem = activeIndex === links.length - 1;
-      const buffer = isLastItem ? 0.05 : 0;
-
-      fillPath.style.strokeDashoffset = totalLength - (totalLength * (percent + buffer));
-    } else {
-      fillPath.style.strokeDashoffset = totalLength;
-    }
-  };
-
-  window.addEventListener('scroll', updateRail, { passive: true });
-
-  let previousWidth = window.innerWidth;
-  window.addEventListener('resize', () => {
-    if (window.innerWidth !== previousWidth) {
-      previousWidth = window.innerWidth;
-      location.reload();
-    }
-  });
-
-  setTimeout(updateRail, 150);
-})();
-
-/* 9. Image Carousel Logic (Infinite Loop + View-Based Autoplay) */
+/* 9. Image Carousel Logic */
 (function() {
   const carousel = document.querySelector('.project-carousel');
   if (!carousel) return;
@@ -775,7 +903,6 @@ document.addEventListener('click', (ev) => {
   const moveToSlide = (targetIndex) => {
     const currentSlide = track.querySelector('.current-slide');
     const targetSlide = slides[targetIndex];
-
     if (!currentSlide || !targetSlide) return;
 
     currentSlide.classList.remove('current-slide');
@@ -792,76 +919,47 @@ document.addEventListener('click', (ev) => {
   const showNextSlide = () => {
     const currentSlide = track.querySelector('.current-slide');
     const currentIndex = slides.findIndex(s => s === currentSlide);
-
     let nextIndex = currentIndex + 1;
-    if (nextIndex >= slides.length) {
-      nextIndex = 0;
-    }
-
+    if (nextIndex >= slides.length) nextIndex = 0;
     moveToSlide(nextIndex);
   };
 
   const showPrevSlide = () => {
     const currentSlide = track.querySelector('.current-slide');
     const currentIndex = slides.findIndex(s => s === currentSlide);
-
     let prevIndex = currentIndex - 1;
-    if (prevIndex < 0) {
-      prevIndex = slides.length - 1;
-    }
-
+    if (prevIndex < 0) prevIndex = slides.length - 1;
     moveToSlide(prevIndex);
   };
 
   if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      showNextSlide();
-      stopAutoplay();
-      startAutoplay();
-    });
+    nextBtn.addEventListener('click', () => { showNextSlide(); stopAutoplay(); startAutoplay(); });
   }
-
   if (prevBtn) {
-    prevBtn.addEventListener('click', () => {
-      showPrevSlide();
-      stopAutoplay();
-      startAutoplay();
-    });
+    prevBtn.addEventListener('click', () => { showPrevSlide(); stopAutoplay(); startAutoplay(); });
   }
-
   if (dotsNav) {
     dotsNav.addEventListener('click', e => {
       const targetDot = e.target.closest('button');
       if (!targetDot) return;
       const targetIndex = dots.findIndex(dot => dot === targetDot);
-
-      moveToSlide(targetIndex);
-      stopAutoplay();
-      startAutoplay();
+      moveToSlide(targetIndex); stopAutoplay(); startAutoplay();
     });
   }
 
   const startAutoplay = () => {
     stopAutoplay();
-    autoPlayInterval = setInterval(() => {
-      if (!isHovered) showNextSlide();
-    }, 3000);
+    autoPlayInterval = setInterval(() => { if (!isHovered) showNextSlide(); }, 3000);
   };
-
-  const stopAutoplay = () => {
-    if (autoPlayInterval) clearInterval(autoPlayInterval);
-  };
+  const stopAutoplay = () => { if (autoPlayInterval) clearInterval(autoPlayInterval); };
 
   carousel.addEventListener('mouseenter', () => { isHovered = true; });
   carousel.addEventListener('mouseleave', () => { isHovered = false; });
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        setTimeout(startAutoplay, 1000);
-      } else {
-        stopAutoplay();
-      }
+      if (entry.isIntersecting) setTimeout(startAutoplay, 1000);
+      else stopAutoplay();
     });
   }, { threshold: 0.5 });
 
@@ -874,5 +972,96 @@ document.addEventListener('click', (ev) => {
     if(nextBtn) nextBtn.style.display = 'none';
     if(dotsNav) dotsNav.style.display = 'none';
   }
+})();
 
+/* 10. Dynamic Rail Track Logic */
+(function() {
+  const tocNav = document.querySelector('.toc-nav');
+  if (!tocNav) return;
+
+  const svg = tocNav.querySelector('.toc-rail-svg');
+  const trackPath = svg.querySelector('.rail-track');
+  const fillPath = svg.querySelector('.rail-fill');
+  const linksWrapper = tocNav.querySelector('.toc-links-wrapper');
+  const links = Array.from(linksWrapper.querySelectorAll('.toc-link'));
+
+  if (links.length === 0) return;
+
+  const parentX = 1;
+  const childX = 16;
+  let pathD = "";
+  let points = [];
+
+  links.forEach((link, index) => {
+    const isChild = link.classList.contains('is-child');
+    const targetX = isChild ? childX : parentX;
+    const linkCenterY = link.offsetTop + (link.offsetHeight / 2);
+    points.push({ x: targetX, y: linkCenterY });
+  });
+
+  if (points.length > 0) {
+    pathD += `M ${points[0].x} 0 `;
+    pathD += `L ${points[0].x} ${points[0].y} `;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p1 = points[i];
+      const p2 = points[i+1];
+      if (p1.x !== p2.x) {
+        const distY = p2.y - p1.y;
+        const cpY1 = p1.y + (distY * 0.5);
+        const cpY2 = p1.y + (distY * 0.5);
+        pathD += `C ${p1.x} ${cpY1}, ${p2.x} ${cpY2}, ${p2.x} ${p2.y} `;
+      } else {
+        pathD += `L ${p2.x} ${p2.y} `;
+      }
+    }
+    const lastP = points[points.length - 1];
+    pathD += `L ${lastP.x} ${linksWrapper.offsetHeight} `;
+  }
+
+  trackPath.setAttribute('d', pathD);
+  fillPath.setAttribute('d', pathD);
+
+  const totalLength = trackPath.getTotalLength();
+  fillPath.style.strokeDasharray = `${totalLength} ${totalLength}`;
+  fillPath.style.strokeDashoffset = totalLength;
+
+  const updateRail = () => {
+    const scrollPos = window.scrollY + 120;
+    let activeIndex = -1;
+    for (let i = 0; i < links.length; i++) {
+      const id = links[i].getAttribute('href');
+      const target = document.querySelector(id);
+      if (target) {
+        if (target.offsetTop <= scrollPos + 100) {
+          activeIndex = i;
+        }
+      }
+    }
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
+      activeIndex = links.length - 1;
+    }
+    links.forEach((l, i) => {
+      if (i === activeIndex) l.classList.add('is-active');
+      else l.classList.remove('is-active');
+    });
+    if (activeIndex >= 0) {
+      const activePoint = points[activeIndex];
+      const percent = activePoint.y / linksWrapper.offsetHeight;
+      const isLastItem = activeIndex === links.length - 1;
+      const buffer = isLastItem ? 0.05 : 0;
+      fillPath.style.strokeDashoffset = totalLength - (totalLength * (percent + buffer));
+    } else {
+      fillPath.style.strokeDashoffset = totalLength;
+    }
+  };
+
+  window.addEventListener('scroll', updateRail, { passive: true });
+  let previousWidth = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (window.innerWidth !== previousWidth) {
+      previousWidth = window.innerWidth;
+      location.reload();
+    }
+  });
+  setTimeout(updateRail, 150);
 })();
