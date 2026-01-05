@@ -1065,3 +1065,37 @@ function updateIcon(theme) {
   });
   setTimeout(updateRail, 150);
 })();
+
+/* Floating Palette Visibility Toggle Logic */
+(function() {
+  const toggleInput = document.getElementById('palette-visibility-toggle');
+  const floatingBtn = document.getElementById('palette-toggle');
+
+  if (!toggleInput || !floatingBtn) return;
+
+  // 1. Check LocalStorage on Load
+  const savedState = localStorage.getItem('show-floating-palette');
+
+  // Default to true (visible) if no setting exists
+  const isVisible = savedState === null ? false : savedState === 'true';
+
+  // Apply Initial State
+  toggleInput.checked = isVisible;
+  if (!isVisible) {
+    floatingBtn.classList.add('is-hidden');
+  }
+
+  // 2. Listen for Changes
+  toggleInput.addEventListener('change', (e) => {
+    const show = e.target.checked;
+
+    if (show) {
+      floatingBtn.classList.remove('is-hidden');
+    } else {
+      floatingBtn.classList.add('is-hidden');
+    }
+
+    // Save Preference
+    localStorage.setItem('show-floating-palette', show);
+  });
+})();
