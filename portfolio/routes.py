@@ -186,28 +186,40 @@ def get_search_data():
     projects_data = load_json_data(PROJECTS_JSON, default=[])
     site_data = load_json_data(SITE_DATA_JSON, default={})
 
-    # 1. Pages (Dynamic URL generation)
+    # 1. Pages (Static Navigation)
     pages = [
-        {"id": "home", "title": "Home", "desc": "Go to Homepage", "url": url_for('portfolio.home'), "icon": "home", "group": "Pages"},
-        {"id": "about", "title": "About", "desc": "Read my story", "url": url_for('portfolio.home') + "#about", "icon": "user", "group": "Pages"},
-        {"id": "projects_section", "title": "Featured Projects", "desc": "View highlighted work", "url": url_for('portfolio.home') + "#projects", "icon": "star", "group": "Pages"},
-        {"id": "all_projects", "title": "All Projects Archive", "desc": "View full project list", "url": url_for('portfolio.all_projects'), "icon": "archive", "group": "Pages"},
-        {"id": "awards", "title": "Awards", "desc": "Honors & Certifications", "url": url_for('portfolio.home') + "#awards", "icon": "award", "group": "Pages"},
-        {"id": "contact", "title": "Contact", "desc": "Get in touch", "url": url_for('portfolio.home') + "#contact", "icon": "mail", "group": "Pages"},
+        {"id": "home", "title": "Home", "desc": "Go to Homepage", "url": url_for('portfolio.home'), "icon": "home",
+         "group": "Pages", "tokens": "landing index"},
+        {"id": "about", "title": "About", "desc": "Read my story", "url": url_for('portfolio.home') + "#about",
+         "icon": "user", "group": "Pages", "tokens": "bio profile me"},
+        {"id": "projects_section", "title": "Featured Projects", "desc": "View highlighted work",
+         "url": url_for('portfolio.home') + "#projects", "icon": "star", "group": "Pages", "tokens": "work portfolio"},
+        {"id": "all_projects", "title": "All Projects Archive", "desc": "View full project list",
+         "url": url_for('portfolio.all_projects'), "icon": "archive", "group": "Pages", "tokens": "list"},
+        {"id": "awards", "title": "Awards", "desc": "Honors & Certifications",
+         "url": url_for('portfolio.home') + "#awards", "icon": "award", "group": "Pages", "tokens": "certificates"},
+        {"id": "contact", "title": "Contact", "desc": "Get in touch", "url": url_for('portfolio.home') + "#contact",
+         "icon": "mail", "group": "Pages", "tokens": "email hire"},
     ]
 
-    # 2. Top 3 Projects
-    top_projects = []
-    # Sort by featured first, then grab top 3
-    sorted_projects = sorted(projects_data, key=lambda x: x.get('featured', False), reverse=True)
-    for p in sorted_projects[:3]:
-        top_projects.append({
+    # 2. Projects
+    all_projects_list = []
+    for p in projects_data:
+        # Format tags for display (e.g., "Python • Flask")
+        tags_display = " • ".join(p.get("tags", [])[:3])
+
+        # Create a "searchable" string containing tags
+        tags_search_str = " ".join(p.get("tags", [])).lower()
+
+        all_projects_list.append({
             "id": f"proj_{p['id']}",
             "title": p['title'],
-            "desc": p.get('role', 'Project'),
+            "desc": tags_display if tags_display else p.get('role', 'Project'),
             "url": url_for('portfolio.project_detail', project_id=p['id']),
             "icon": "zap",
-            "group": "Top Projects"
+            "group": "Projects",
+            "search_tags": tags_search_str,  # Used for tech stack search
+            "tokens": p.get("tagline", "").lower()  # Used for deep search
         })
 
     # 3. Connect (Socials)
@@ -221,7 +233,8 @@ def get_search_data():
                 "url": s['url'],
                 "icon": s.get('icon', 'link'),
                 "group": "Connect",
-                "external": True
+                "external": True,
+                "tokens": s.get('handle', '').replace('@', '').lower()
             })
 
     # 4. Resume
@@ -230,14 +243,15 @@ def get_search_data():
         "title": "View Resume",
         "desc": "Open PDF in Browser",
         "url": url_for('portfolio.download_resume'),
-        "icon": "external-link",
+        "icon": "file-text",
         "group": "Resume",
-        "external": True
+        "external": True,
+        "tokens": "cv pdf download"
     }]
 
     return jsonify({
         "pages": pages,
-        "projects": top_projects,
+        "projects": all_projects_list,
         "connect": socials,
         "resume": resume
     })

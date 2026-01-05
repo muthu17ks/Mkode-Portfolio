@@ -1,6 +1,6 @@
 /**
  * Main Application Script (Fully Updated)
- * Includes: Theme Picker, Navbar, Dynamic Command Palette, Fixed Custom Cursor, Animations
+ * Includes: Theme Picker, Navbar, Smart Search, Fixed Custom Cursor, Animations
  */
 'use strict';
 
@@ -171,25 +171,16 @@
   root.classList.add(savedTheme === 'dark' ? 'dark-theme' : 'light-theme');
   applyPalette(savedPalette);
 
-function updateIcon(theme) {
-    // 1. Update Main Navbar Toggle
+  function updateIcon(theme) {
     if (toggleBtn) {
-      toggleBtn.innerHTML = theme === 'dark'
-        ? '<i data-lucide="moon"></i>'
-        : '<i data-lucide="sun"></i>';
+      toggleBtn.innerHTML = theme === 'dark' ? '<i data-lucide="moon"></i>' : '<i data-lucide="sun"></i>';
     }
-
-    // 2. Update Command Palette Toggle (SYNC FIX)
     const cpThemeBtn = document.getElementById('cp-theme-btn');
     if (cpThemeBtn) {
-        cpThemeBtn.innerHTML = theme === 'dark'
-          ? '<i data-lucide="moon"></i>'
-          : '<i data-lucide="sun"></i>';
+        cpThemeBtn.innerHTML = theme === 'dark' ? '<i data-lucide="moon"></i>' : '<i data-lucide="sun"></i>';
     }
-
-    // Refresh Icons
     if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-}
+  }
   updateIcon(savedTheme);
 
   if (toggleBtn) {
@@ -232,7 +223,6 @@ function updateIcon(theme) {
   const allNavLinks = document.querySelectorAll('a[href^="#"]');
   const sections = Array.from(document.querySelectorAll('section[id]'));
 
-  // Mobile Menu Logic (Currently hidden via CSS but kept for compatibility)
   if (mobileBtn && navMenu) {
     mobileBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -310,7 +300,7 @@ function updateIcon(theme) {
   });
 })();
 
-/* 3. Command Palette System (Dynamic & Data-Driven) */
+/* 3. Command Palette System (Smart Search Update) */
 (function() {
   const triggerBtn = document.getElementById('cp-trigger');
   const modal = document.getElementById('cp-modal');
@@ -336,7 +326,6 @@ function updateIcon(theme) {
       allData = await res.json();
     } catch (err) {
       console.error(err);
-      // Fallback
       allData = { pages: [], projects: [], connect: [], resume: [] };
     }
   }
@@ -350,8 +339,8 @@ function updateIcon(theme) {
 
   function addRecent(item) {
     let recents = getRecents();
-    recents = recents.filter(r => r.id !== item.id); // Remove dupe
-    recents.unshift(item); // Add to top
+    recents = recents.filter(r => r.id !== item.id);
+    recents.unshift(item);
     if (recents.length > MAX_RECENTS) recents = recents.slice(0, MAX_RECENTS);
     localStorage.setItem('cp_recents', JSON.stringify(recents));
   }
@@ -361,19 +350,19 @@ function updateIcon(theme) {
     let recents = getRecents();
     recents = recents.filter(r => r.id !== id);
     localStorage.setItem('cp_recents', JSON.stringify(recents));
-    filterCommands(input.value); // Re-render
+    filterCommands(input.value);
   }
 
   function clearRecents() {
     localStorage.removeItem('cp_recents');
-    filterCommands(input.value); // Re-render
+    filterCommands(input.value);
   }
 
   // --- 3. Open/Close Logic ---
   async function openPalette() {
     isOpen = true;
     modal.classList.add('is-open');
-    document.body.classList.add('is-modal-open'); // Signals Cursor Logic to Reset
+    document.body.classList.add('is-modal-open');
 
     if (!allData) await fetchData();
 
@@ -390,39 +379,79 @@ function updateIcon(theme) {
     document.body.style.overflow = '';
   }
 
-  // --- 4. Filtering & Rendering ---
+// --- 4. Filtering & Rendering (Calibrated Search Logic) ---
   function filterCommands(query) {
     const q = query.toLowerCase().trim();
 
     if (q === '') {
-      // DEFAULT VIEW
+      // DEFAULT VIEW: Recent, Pages, Top 3 Projects, Connect, Resume
       const recents = getRecents().map(r => ({ ...r, group: 'Recent' }));
+
+      // Get top 3 projects for default view (simulate "Featured")
+      const topProjects = (allData.projects || []).slice(0, 3).map(p => ({...p, group: 'Top Projects'}));
+
       filteredCommands = [
         ...recents,
         ...allData.pages,
-        ...allData.projects,
+        ...topProjects,
         ...allData.connect,
         ...allData.resume
       ];
     } else {
-      // SEARCH VIEW
+      // SEARCH VIEW: Weighted Scoring
       const pool = [
         ...allData.pages,
         ...allData.projects,
         ...allData.connect,
         ...allData.resume
       ];
-      filteredCommands = pool.filter(item =>
-        item.title.toLowerCase().includes(q) ||
-        item.desc.toLowerCase().includes(q)
-      );
+
+      filteredCommands = pool.map(item => {
+        let score = 0;
+        const titleLower = item.title.toLowerCase();
+        const tagsLower = (item.search_tags || '').toLowerCase(); // Tech stack
+        const tokensLower = (item.tokens || '').toLowerCase(); // Extra keywords
+
+        // --- SCORING LOGIC ---
+
+        // 1. Exact Title Match (Highest Priority)
+        if (titleLower === q) {
+            score = 150;
+        }
+        // 2. Title STARTS WITH query (e.g., "r" -> "Resume")
+        else if (titleLower.startsWith(q)) {
+            score = 100;
+        }
+        // 3. Tech Stack Word STARTS WITH query (e.g., "py" -> "Python")
+        else if (tagsLower.split(' ').some(tag => tag.startsWith(q))) {
+            score = 80;
+        }
+        // 4. Title CONTAINS query (e.g., "pro" -> "Featured Projects")
+        else if (titleLower.includes(q)) {
+            score = 60;
+        }
+        // 5. Tech Stack CONTAINS query
+        else if (tagsLower.includes(q)) {
+            score = 40;
+        }
+        // 6. Keywords/Tokens Match
+        else if (tokensLower.includes(q) || (item.desc && item.desc.toLowerCase().includes(q))) {
+            score = 20;
+        }
+
+        return { ...item, _score: score };
+      })
+      // Filter out non-matches (score 0)
+      .filter(item => item._score > 0)
+      // Sort by Score Descending (Highest score first)
+      .sort((a, b) => b._score - a._score);
     }
 
     selectedIndex = 0;
     renderCommands(q === '');
   }
 
-  function renderCommands(isDefaultView) {
+function renderCommands(isDefaultView) {
     resultsContainer.innerHTML = '';
 
     if (filteredCommands.length === 0) {
@@ -430,71 +459,109 @@ function updateIcon(theme) {
       return;
     }
 
-    const groups = {};
-    // Ensure order is correct
-    const groupOrder = ['Recent', 'Pages', 'Top Projects', 'Connect', 'Resume'];
+    // If searching, we flatten the groups to respect the score sorting
+    // If default view, we enforce specific category buckets
 
-    filteredCommands.forEach(cmd => {
-      if (!groups[cmd.group]) groups[cmd.group] = [];
-      groups[cmd.group].push(cmd);
-    });
+    if (!isDefaultView) {
+        // --- SEARCH RESULTS VIEW (Flat List based on Score) ---
+        // We still wrap them in a generic container or just list them directly.
+        // To keep the design consistent, let's group them dynamically by "Best Matches"
+        // or just group by their original category but ordered by score.
 
-    groupOrder.forEach(groupName => {
-      const items = groups[groupName];
-      if (!items || items.length === 0) return;
+        const groups = {};
+        const groupOrder = []; // Dynamic order based on what appears first in sorted list
 
-      const header = document.createElement('div');
-      header.className = 'cp-group-header';
+        filteredCommands.forEach(cmd => {
+            // Use original group name (Projects, Pages, etc.)
+            let g = cmd.group;
+            if (g === 'Top Projects') g = 'Projects';
 
-      let titleHtml = `<span class="cp-group-title">${groupName}</span>`;
-      if (groupName === 'Recent') {
-        titleHtml += `<button class="cp-clear-all-btn">Clear</button>`;
-      }
-
-      header.innerHTML = titleHtml;
-      resultsContainer.appendChild(header);
-
-      if (groupName === 'Recent') {
-        header.querySelector('.cp-clear-all-btn').addEventListener('click', clearRecents);
-      }
-
-      items.forEach((item, index) => {
-        const globalIndex = filteredCommands.indexOf(item);
-        const div = document.createElement('div');
-        div.className = `cp-item ${globalIndex === selectedIndex ? 'is-selected' : ''}`;
-
-        let deleteBtnHtml = '';
-        if (groupName === 'Recent') {
-          deleteBtnHtml = `<button class="cp-delete-btn" title="Remove from history"><i data-lucide="x"></i></button>`;
-        }
-
-        div.innerHTML = `
-          <i data-lucide="${item.icon}" class="cp-item-icon"></i>
-          <div class="cp-info">
-            <span class="cp-title">${item.title}</span>
-            <span class="cp-desc">${item.desc}</span>
-          </div>
-          ${deleteBtnHtml}
-        `;
-
-        div.addEventListener('click', () => executeCommand(item));
-        div.addEventListener('mouseenter', () => {
-          selectedIndex = globalIndex;
-          document.querySelectorAll('.cp-item').forEach(el => el.classList.remove('is-selected'));
-          div.classList.add('is-selected');
+            if (!groups[g]) {
+                groups[g] = [];
+                groupOrder.push(g); // Add to order list as we encounter them (high score first)
+            }
+            groups[g].push(cmd);
         });
 
+        groupOrder.forEach(groupName => {
+            createGroupSection(groupName, groups[groupName]);
+        });
+
+    } else {
+        // --- DEFAULT VIEW (Strict Category Buckets) ---
+        const groups = {};
+        const groupOrder = ['Recent', 'Pages', 'Top Projects', 'Connect', 'Resume'];
+
+        filteredCommands.forEach(cmd => {
+            if (!groups[cmd.group]) groups[cmd.group] = [];
+            groups[cmd.group].push(cmd);
+        });
+
+        groupOrder.forEach(groupName => {
+            if (groups[groupName]) {
+                createGroupSection(groupName, groups[groupName]);
+            }
+        });
+    }
+
+    // Helper to draw the section
+    function createGroupSection(groupName, items) {
+        if (!items || items.length === 0) return;
+
+        const header = document.createElement('div');
+        header.className = 'cp-group-header';
+
+        let titleHtml = `<span class="cp-group-title">${groupName}</span>`;
         if (groupName === 'Recent') {
-          div.querySelector('.cp-delete-btn').addEventListener('click', (e) => removeRecent(item.id, e));
+            titleHtml += `<button class="cp-clear-all-btn">Clear</button>`;
         }
 
-        resultsContainer.appendChild(div);
-      });
-    });
+        header.innerHTML = titleHtml;
+        resultsContainer.appendChild(header);
+
+        if (groupName === 'Recent') {
+            header.querySelector('.cp-clear-all-btn').addEventListener('click', clearRecents);
+        }
+
+        items.forEach((item) => {
+            // Find global index for keyboard navigation
+            const globalIndex = filteredCommands.indexOf(item);
+            const div = document.createElement('div');
+            div.className = `cp-item ${globalIndex === selectedIndex ? 'is-selected' : ''}`;
+
+            let deleteBtnHtml = '';
+            if (groupName === 'Recent') {
+                deleteBtnHtml = `<button class="cp-delete-btn" title="Remove"><i data-lucide="x"></i></button>`;
+            }
+
+            div.innerHTML = `
+                <i data-lucide="${item.icon}" class="cp-item-icon"></i>
+                <div class="cp-info">
+                    <span class="cp-title">${item.title}</span>
+                    <span class="cp-desc">${item.desc}</span>
+                </div>
+                ${deleteBtnHtml}
+            `;
+
+            div.addEventListener('click', () => executeCommand(item));
+            div.addEventListener('mouseenter', () => {
+                selectedIndex = globalIndex;
+                document.querySelectorAll('.cp-item').forEach(el => el.classList.remove('is-selected'));
+                div.classList.add('is-selected');
+            });
+
+            if (groupName === 'Recent') {
+                div.querySelector('.cp-delete-btn').addEventListener('click', (e) => removeRecent(item.id, e));
+            }
+
+            resultsContainer.appendChild(div);
+        });
+    }
 
     if (window.lucide) window.lucide.createIcons();
     scrollToSelected();
   }
+
 
   function scrollToSelected() {
     const selectedEl = resultsContainer.querySelector('.is-selected');
@@ -650,7 +717,6 @@ function updateIcon(theme) {
   }
 
   function loop() {
-    // ---- CRITICAL FIX START: Force Reset if Modal is Open ----
     if (document.body.classList.contains('is-modal-open')) {
       if (lockedItem) {
         lockedItem.style.transform = '';
@@ -669,7 +735,6 @@ function updateIcon(theme) {
             ring.style.opacity = '1';
         }
     }
-    // ---- CRITICAL FIX END ----
 
     if (!isCursorActive) return;
     if (!hasMoved) { requestAnimationFrame(loop); return; }
@@ -1073,16 +1138,16 @@ function updateIcon(theme) {
 
   if (!toggleInput || !floatingBtn) return;
 
-  // 1. Check LocalStorage on Load
+  // 1. Check LocalStorage (Default to FALSE/HIDDEN if null)
   const savedState = localStorage.getItem('show-floating-palette');
-
-  // Default to true (visible) if no setting exists
-  const isVisible = savedState === null ? false : savedState === 'true';
+  const isVisible = savedState === 'true'; // Strict check, defaults to false
 
   // Apply Initial State
   toggleInput.checked = isVisible;
   if (!isVisible) {
     floatingBtn.classList.add('is-hidden');
+  } else {
+    floatingBtn.classList.remove('is-hidden');
   }
 
   // 2. Listen for Changes
@@ -1095,7 +1160,6 @@ function updateIcon(theme) {
       floatingBtn.classList.add('is-hidden');
     }
 
-    // Save Preference
     localStorage.setItem('show-floating-palette', show);
   });
 })();
