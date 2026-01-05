@@ -255,3 +255,8 @@ def get_search_data():
         "connect": socials,
         "resume": resume
     })
+
+@portfolio_bp.route("/legal", methods=["GET"])
+def legal():
+    """Renders the Legal & Privacy page."""
+    return render_template("legal.html")

@@ -6,6 +6,7 @@ configures extensions (Mail, CSRF), and registers the main portfolio blueprint.
 """
 
 import os
+from datetime import datetime
 from flask import Flask
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect, generate_csrf
@@ -43,9 +44,16 @@ app.mail = mail
 # Context Processors
 # ==============================
 @app.context_processor
-def inject_csrf():
-    """Inject CSRF token generator into all templates."""
-    return {"csrf_token": generate_csrf}
+def inject_global_vars():
+    """
+    Injects global variables into all templates.
+    1. csrf_token: For secure forms.
+    2. current_year: Automates the copyright year in the footer.
+    """
+    return {
+        "csrf_token": generate_csrf,
+        "current_year": datetime.now().year
+    }
 
 # ==============================
 # Register Blueprints

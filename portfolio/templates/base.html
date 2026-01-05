@@ -73,8 +73,14 @@
 
       <div class="footer__left">
         <p class="footer__copy">
-          &copy; 2025 <span class="opacity-50">All rights reserved.</span>
+          &copy; {{ current_year }} <span class="opacity-50">All rights reserved.</span>
         </p>
+        <a href="{{ url_for('portfolio.legal') }}"
+           style="font-size: 12px; color: var(--about-text-muted); text-decoration: none; transition: color 0.2s;"
+           onmouseover="this.style.color='var(--color-text)'"
+           onmouseout="this.style.color='var(--about-text-muted)'">
+           Privacy Policy & Terms
+        </a>
       </div>
 
       <div class="footer__right">

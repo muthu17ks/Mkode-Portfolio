@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Legal Information | Muthukumaran{% endblock %}
+
+{% block navbar %}
+  {% include 'navbar.html' %}
+{% endblock %}
+
+{% block content %}
+
+<section class="section-wrapper legal-section">
+
+  <div class="container legal-container">
+
+    <div class="legal-header">
+      <h1 class="section-title">Legal & Privacy</h1>
+      <p class="section-subtitle">Transparency regarding code usage and data handling.</p>
+    </div>
+
+    <div class="text-block reveal-up">
+      <h3 class="legal-heading">
+        <i data-lucide="shield-alert" class="legal-icon"></i>
+        Terms of Use
+      </h3>
+
+      <p>
+        The design, architecture, source code, and content of this portfolio are the intellectual property of <strong>Muthukumaran</strong> (&copy; {{ current_year }}).
+      </p>
+
+      <div class="challenge-card legal-card legal-card--allowed">
+        <h4 class="legal-card-title muted">Allowed Usage</h4>
+        <p class="legal-card-text">
+          Recruiters, hiring managers, and students are encouraged to <strong>view and analyze</strong> the source code (via GitHub) for educational or evaluation purposes.
+        </p>
+      </div>
+
+      <div class="challenge-card legal-card legal-card--prohibited">
+        <h4 class="legal-card-title danger">Strictly Prohibited</h4>
+        <p class="legal-card-text">
+          You may <strong>not</strong> clone, copy, distribute, or use this code/design for your own commercial portfolio, business website, or public template without express written permission.
+        </p>
+      </div>
+    </div>
+
+    <hr class="legal-divider">
+
+    <div class="text-block reveal-up delay-100">
+      <h3 class="legal-heading">
+        <i data-lucide="lock" class="legal-icon"></i>
+        Privacy Policy
+      </h3>
+
+      <p>
+        This website respects your privacy. I do not use cookies for ad tracking, and I do not use Google Analytics.
+      </p>
+
+      <p><strong>Contact Form Data:</strong></p>
+      <ul class="feature-list-simple legal-list">
+        <li>
+          <i data-lucide="check"></i>
+          <span>When you use the contact form, your Name and Email are sent directly to my personal inbox via secure SMTP.</span>
+        </li>
+        <li>
+          <i data-lucide="check"></i>
+          <span>This data is used <strong>solely to reply to your message</strong>.</span>
+        </li>
+        <li>
+          <i data-lucide="check"></i>
+          <span>I will never sell, share, or add your email to any marketing lists.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="legal-footer">
+      <a href="{{ url_for('portfolio.home') }}" class="btn-main">
+        <i data-lucide="arrow-left"></i> <span>Back to Home</span>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

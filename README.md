@@ -61,6 +61,11 @@ A high-performance personal portfolio website designed to showcase projects and 
     python app.py
     ```
 
-## 📄 License
+## © Copyright
 
-This project is open source and available under the [MIT License](LICENSE).
+**© 2026 Muthukumaran. All Rights Reserved.**
+
+This repository contains the personal portfolio code of Muthukumaran. The code is publicly available for **recruitment and evaluation purposes only**.
+
+* **You MAY** view this code to assess my skills.
+* **You MAY NOT** use, copy, modify, merge, publish, or distribute this code for your own portfolio or commercial projects.

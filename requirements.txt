@@ -3,3 +3,4 @@ Flask-Mail
 Flask-WTF
 python-dotenv
 email_validator
+pymongo
