@@ -131,7 +131,7 @@
         {% for p in featured_main %}
 
         {# Define Image Logic: Get first image from list, or fallback #}
-        {% set thumb_image = p.images[0] if p.images and p.images|length > 0 else url_for('portfolio.static', filename='assets/images/project-placeholder-card.png') %}
+        {% set thumb_image = p.images[0] if p.images and p.images|length > 0 else url_for('portfolio.static', filename='images/project-placeholder-thumb.png') %}
 
         <article class="project-card" id="project-{{ p.id | replace(' ', '-') | lower }}">
 

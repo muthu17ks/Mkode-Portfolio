@@ -179,26 +179,26 @@
         </aside>
 
       </div>
-                  <nav class="project-navigation reveal-up">
-                {% if prev_project %}
-                <a href="{{ url_for('portfolio.project_detail', project_id=prev_project.id) }}" class="nav-card prev">
-                  <div class="nav-icon"><i data-lucide="arrow-left"></i></div>
-                  <div class="nav-info">
-                    <span class="nav-label">Previous Project</span>
-                    <span class="nav-title">{{ prev_project.title }}</span>
-                  </div>
-                </a>
-                {% else %}<div class="nav-spacer"></div>{% endif %}
-                {% if next_project %}
-                <a href="{{ url_for('portfolio.project_detail', project_id=next_project.id) }}" class="nav-card next">
-                  <div class="nav-info">
-                    <span class="nav-label">Next Project</span>
-                    <span class="nav-title">{{ next_project.title }}</span>
-                  </div>
-                  <div class="nav-icon"><i data-lucide="arrow-right"></i></div>
-                </a>
-                {% endif %}
-            </nav>
+      <nav class="project-navigation reveal-up">
+        {% if prev_project %}
+        <a href="{{ url_for('portfolio.project_detail', project_id=prev_project.id) }}" class="nav-card prev">
+          <div class="nav-icon"><i data-lucide="arrow-left"></i></div>
+          <div class="nav-info">
+            <span class="nav-label">Previous Project</span>
+            <span class="nav-title">{{ prev_project.title }}</span>
+          </div>
+        </a>
+        {% else %}<div class="nav-spacer"></div>{% endif %}
+        {% if next_project %}
+        <a href="{{ url_for('portfolio.project_detail', project_id=next_project.id) }}" class="nav-card next">
+          <div class="nav-info">
+            <span class="nav-label">Next Project</span>
+            <span class="nav-title">{{ next_project.title }}</span>
+          </div>
+          <div class="nav-icon"><i data-lucide="arrow-right"></i></div>
+        </a>
+        {% endif %}
+    </nav>
 
     </div>
   </article>

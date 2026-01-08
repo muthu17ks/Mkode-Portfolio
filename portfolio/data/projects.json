@@ -189,9 +189,7 @@
     "tagline": "Python graphics project with custom AI engine",
     "last_updated": "Nov 2024",
     "desc": "A graphical game built from scratch using Python Turtle with a custom AI.",
-    "images": [
-      "/portfolio/static/images/project-tictactoe-thumb.png"
-    ],
+    "images": [],
     "highlights": [
       "Custom Rendering Loop",
       "Heuristic AI Opponent",
