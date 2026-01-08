@@ -950,7 +950,7 @@ function renderCommands(isDefaultView) {
   setTimeout(dismissPreloader, 5000);
 })();
 
-/* 9. Image Carousel Logic */
+/* 9. Image Carousel Logic (Sliding Animation) */
 (function() {
   const carousel = document.querySelector('.project-carousel');
   if (!carousel) return;
@@ -962,76 +962,86 @@ function renderCommands(isDefaultView) {
   const dotsNav = carousel.querySelector('.carousel-nav');
   const dots = dotsNav ? Array.from(dotsNav.children) : [];
 
+  let currentIndex = 0;
   let autoPlayInterval;
   let isHovered = false;
 
-  const moveToSlide = (targetIndex) => {
-    const currentSlide = track.querySelector('.current-slide');
-    const targetSlide = slides[targetIndex];
-    if (!currentSlide || !targetSlide) return;
+  const updateSlidePosition = () => {
+    // Move the track to the left by (index * 100)%
+    track.style.transform = `translateX(-${currentIndex * 100}%)`;
 
-    currentSlide.classList.remove('current-slide');
-    targetSlide.classList.add('current-slide');
-
+    // Update dots
     if (dotsNav) {
       const currentDot = dotsNav.querySelector('.current-slide');
-      const targetDot = dots[targetIndex];
-      if(currentDot) currentDot.classList.remove('current-slide');
-      if(targetDot) targetDot.classList.add('current-slide');
+      if (currentDot) currentDot.classList.remove('current-slide');
+      if (dots[currentIndex]) dots[currentIndex].classList.add('current-slide');
     }
   };
 
   const showNextSlide = () => {
-    const currentSlide = track.querySelector('.current-slide');
-    const currentIndex = slides.findIndex(s => s === currentSlide);
-    let nextIndex = currentIndex + 1;
-    if (nextIndex >= slides.length) nextIndex = 0;
-    moveToSlide(nextIndex);
+    currentIndex = (currentIndex + 1) % slides.length;
+    updateSlidePosition();
   };
 
   const showPrevSlide = () => {
-    const currentSlide = track.querySelector('.current-slide');
-    const currentIndex = slides.findIndex(s => s === currentSlide);
-    let prevIndex = currentIndex - 1;
-    if (prevIndex < 0) prevIndex = slides.length - 1;
-    moveToSlide(prevIndex);
+    currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+    updateSlidePosition();
   };
 
   if (nextBtn) {
-    nextBtn.addEventListener('click', () => { showNextSlide(); stopAutoplay(); startAutoplay(); });
+    nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent modal toggling
+        showNextSlide();
+        stopAutoplay();
+        startAutoplay();
+    });
   }
+
   if (prevBtn) {
-    prevBtn.addEventListener('click', () => { showPrevSlide(); stopAutoplay(); startAutoplay(); });
+    prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showPrevSlide();
+        stopAutoplay();
+        startAutoplay();
+    });
   }
+
   if (dotsNav) {
     dotsNav.addEventListener('click', e => {
+      e.stopPropagation();
       const targetDot = e.target.closest('button');
       if (!targetDot) return;
-      const targetIndex = dots.findIndex(dot => dot === targetDot);
-      moveToSlide(targetIndex); stopAutoplay(); startAutoplay();
+      currentIndex = dots.findIndex(dot => dot === targetDot);
+      updateSlidePosition();
+      stopAutoplay();
+      startAutoplay();
     });
   }
 
   const startAutoplay = () => {
     stopAutoplay();
-    autoPlayInterval = setInterval(() => { if (!isHovered) showNextSlide(); }, 3000);
+    autoPlayInterval = setInterval(() => { if (!isHovered) showNextSlide(); }, 4000);
   };
+
   const stopAutoplay = () => { if (autoPlayInterval) clearInterval(autoPlayInterval); };
 
   carousel.addEventListener('mouseenter', () => { isHovered = true; });
   carousel.addEventListener('mouseleave', () => { isHovered = false; });
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) setTimeout(startAutoplay, 1000);
-      else stopAutoplay();
-    });
-  }, { threshold: 0.5 });
-
+  // Initialize visibility
   if (slides.length > 1) {
-    observer.observe(carousel);
     if(prevBtn) prevBtn.classList.remove('is-hidden');
     if(nextBtn) nextBtn.classList.remove('is-hidden');
+
+    // Start Autoplay when visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+        if (entry.isIntersecting) startAutoplay();
+        else stopAutoplay();
+        });
+    }, { threshold: 0.5 });
+    observer.observe(carousel);
+
   } else {
     if(prevBtn) prevBtn.style.display = 'none';
     if(nextBtn) nextBtn.style.display = 'none';
@@ -1057,9 +1067,11 @@ function renderCommands(isDefaultView) {
   let pathD = "";
   let points = [];
 
+  // Draw the SVG Path
   links.forEach((link, index) => {
     const isChild = link.classList.contains('is-child');
     const targetX = isChild ? childX : parentX;
+    // Calculate vertical center of each link
     const linkCenterY = link.offsetTop + (link.offsetHeight / 2);
     points.push({ x: targetX, y: linkCenterY });
   });
@@ -1091,29 +1103,43 @@ function renderCommands(isDefaultView) {
   fillPath.style.strokeDashoffset = totalLength;
 
   const updateRail = () => {
-    const scrollPos = window.scrollY + 120;
+    // Offset increased to account for card padding and sticky header
+    const scrollPos = window.scrollY + 180;
     let activeIndex = -1;
+
     for (let i = 0; i < links.length; i++) {
       const id = links[i].getAttribute('href');
       const target = document.querySelector(id);
+
       if (target) {
-        if (target.offsetTop <= scrollPos + 100) {
+        // Use offsetTop relative to the document
+        // We check if the target top is above our scroll position threshold
+        if (target.getBoundingClientRect().top + window.scrollY <= scrollPos + 100) {
           activeIndex = i;
         }
       }
     }
+
+    // Handle reaching the very bottom of the page
     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
       activeIndex = links.length - 1;
     }
+
+    // Update Active Link Classes
     links.forEach((l, i) => {
       if (i === activeIndex) l.classList.add('is-active');
       else l.classList.remove('is-active');
     });
+
+    // Animate the SVG Line
     if (activeIndex >= 0) {
       const activePoint = points[activeIndex];
       const percent = activePoint.y / linksWrapper.offsetHeight;
+
+      // If it's the last item, fill completely, otherwise stop at the point
       const isLastItem = activeIndex === links.length - 1;
       const buffer = isLastItem ? 0.05 : 0;
+
       fillPath.style.strokeDashoffset = totalLength - (totalLength * (percent + buffer));
     } else {
       fillPath.style.strokeDashoffset = totalLength;
@@ -1121,13 +1147,17 @@ function renderCommands(isDefaultView) {
   };
 
   window.addEventListener('scroll', updateRail, { passive: true });
+
+  // Recalculate on resize to fix line position if text wraps
   let previousWidth = window.innerWidth;
   window.addEventListener('resize', () => {
     if (window.innerWidth !== previousWidth) {
       previousWidth = window.innerWidth;
-      location.reload();
+      location.reload(); // Simplest way to redraw path correctly
     }
   });
+
+  // Initial call with a slight delay to ensure layout is settled
   setTimeout(updateRail, 150);
 })();
 

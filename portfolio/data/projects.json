@@ -93,7 +93,6 @@
       "Flask",
       "Python",
       "MySQL",
-      "Pillow",
       "Security"
     ],
     "live_url": "",
@@ -273,43 +272,69 @@
       }
     ]
   },
-  {
+{
     "id": "watermark-studio",
     "title": "Watermark Studio",
-    "tagline": "Python utility for batch image processing",
-    "last_updated": "July 2023",
-    "desc": "A desktop tool that applies transparent watermarks to images in bulk.",
-    "images": [],
+    "tagline": "Desktop & Web Hybrid — Professional Branding Utility",
+    "last_updated": "Jan 2026",
+    "desc": "A dual-platform branding tool (Desktop EXE + Streamlit Cloud) designed for high-performance batch image processing with professional alpha-compositing.",
+    "images": [
+      "/portfolio/static/images/project-watermark-studio-thumb-1.png",
+      "/portfolio/static/images/project-watermark-studio-thumb-2.png"
+    ],
     "highlights": [
-      "Batch Image Processing",
-      "Pixel-perfect Alpha Compositing",
-      "Clean Tkinter GUI"
+      "Dual Desktop/Web Deployment",
+      "High-DPI Scaling Engine",
+      "Alpha Compositing Pipeline"
     ],
     "tags": [
       "Python",
       "Tkinter",
+      "Streamlit",
       "Pillow",
-      "Image Processing"
+      "UI/UX Design"
     ],
-    "live_url": "",
+    "live_url": "https://watermark-studio.streamlit.app/",
     "code_url": "https://github.com/muthu17ks/Watermark-Studio",
-    "featured": false,
+    "featured": true,
     "sections": [
       {
-        "id": "overview",
-        "title": "Overview",
-        "type": "text",
-        "content": "Watermark Studio is a desktop automation tool built to batch-process images. It allows photographers and content creators to apply transparent watermarks to hundreds of photos in seconds, preserving metadata and quality."
+        "id": "preview",
+        "title": "App Preview",
+        "type": "carousel"
       },
       {
-        "id": "features",
-        "title": "Key Functions",
+        "id": "overview",
+        "title": "Solution Overview",
+        "type": "text",
+        "content": "Watermark Studio is a professional-grade utility designed to solve the problem of manual image branding. It evolved from a Tkinter desktop automation tool into a hybrid suite, offering a native Windows installer (Inno Setup) and a global cloud-hosted web application."
+      },
+      {
+        "id": "engineering-logic",
+        "title": "Core Engineering",
+        "type": "group",
+        "subsections": [
+          {
+            "id": "processing",
+            "title": "Pixel-Perfect Alpha Compositing",
+            "content": "The core engine utilizes the Pillow (PIL) library to perform complex alpha-blending. It handles various watermark modes (text/logo) and uses coordinate-mapping to ensure the watermark remains proportionate across different image resolutions."
+          },
+          {
+            "id": "deployment",
+            "title": "Cross-Platform Strategy",
+            "content": "The project demonstrates versatility in deployment: the desktop version provides high-speed local processing for hundreds of images, while the Streamlit web version offers an instant, zero-installation branding experience for quick edits."
+          }
+        ]
+      },
+      {
+        "id": "achievements",
+        "title": "Key Achievements",
         "type": "list",
         "content_items": [
-          "High-speed Batch Processing Loop",
-          "Alpha Compositing for transparency",
-          "Dynamic Positioning (Top-Left, Center, etc.)",
-          "Real-time GUI Controls for Opacity"
+          "Optimized batch loop processing with low memory footprint",
+          "Implemented High-DPI support for Windows 10/11 environments",
+          "Developed a custom 'Smart Slider' component for intuitive opacity control",
+          "Successful Cloud deployment with automated requirements management"
         ]
       }
     ]

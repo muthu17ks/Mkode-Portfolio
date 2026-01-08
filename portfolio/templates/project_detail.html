@@ -11,7 +11,6 @@
   <article class="project-page">
     <div class="container">
 
-      {# --- Header --- #}
       <header class="project-header">
         <div class="project-back-wrapper">
           <a href="{{ back_url }}" class="link-archive icon-link">
@@ -26,10 +25,10 @@
 
       <div class="project-layout-grid">
 
-        {# --- LEFT COLUMN: Content --- #}
+        {# --- LEFT COLUMN: Main Content --- #}
         <div class="layout-content">
 
-          {# A. CAROUSEL #}
+          {# 1. CAROUSEL #}
           {% set carousel_section = project.sections | selectattr('type', 'equalto', 'carousel') | first %}
           {% if carousel_section %}
           <div id="{{ carousel_section.id }}" class="project-carousel reveal-up scroll-spy-target">
@@ -38,6 +37,7 @@
                 {% if project.images %}
                   {% for img in project.images %}
                   <li class="carousel-slide {% if loop.first %}current-slide{% endif %}">
+                    <div class="blur-backdrop" style="background-image: url('{{ img }}');"></div>
                     <img src="{{ img }}" alt="{{ project.title }} - {{ carousel_section.title }}">
                   </li>
                   {% endfor %}
@@ -60,61 +60,42 @@
           </div>
           {% endif %}
 
-          {# B. META GRID #}
-          <div class="project-meta-grid reveal-up">
-            <div class="meta-card">
-              <h4 class="meta-label">Technologies</h4>
-              <div class="tech-stack-row">
-                {% for t in project.tags %}
-                <span class="tech-tag">{{ t }}</span>
-                {% endfor %}
-              </div>
-            </div>
-            <div class="meta-card actions-card">
-              <h4 class="meta-label">Project Links</h4>
-              <div class="meta-actions">
-                {% if project.live_url %}
-                <a href="{{ project.live_url }}" target="_blank" class="btn-main full-width-btn">
-                  <i data-lucide="external-link"></i> Visit Live Website
-                </a>
-                {% endif %}
-                {% if project.code_url %}
-                <a href="{{ project.code_url }}" target="_blank" class="btn-secondary full-width-btn">
-                  <i data-lucide="github"></i> View Source Code
-                </a>
-                {% endif %}
-              </div>
+          {# 2. TECH STACK (Moved Here) #}
+          <div class="tech-stack-card reveal-up">
+            <h4 class="card-label">Technologies Used</h4>
+            <div class="sidebar-tech-row">
+              {% for t in project.tags %}
+              <span class="sidebar-tag">{{ t }}</span>
+              {% endfor %}
             </div>
           </div>
 
-          {# C. TEXT SECTIONS #}
+          {# 3. TEXT CONTENT #}
           <div class="content-body">
+            <div class="content-card-wrapper">
             {% if project.sections %}
               {% for section in project.sections %}
                 {% if section.type != 'carousel' %}
 
-                  {# --- GROUP (Parent + Subsections) --- #}
                   {% if section.type == 'group' %}
-                    {# 1. Main Heading for the Group #}
                     <div id="{{ section.id }}" class="group-header scroll-spy-target reveal-up">
                       <h2>{{ section.title }}</h2>
                     </div>
-                    {# 2. Subsections #}
-                    {% for sub in section.subsections %}
-                      <section id="{{ sub.id }}" class="text-block scroll-spy-target reveal-up">
-                        <h3>{{ sub.title }}</h3>
-                        <p>{{ sub.content }}</p>
-                      </section>
-                    {% endfor %}
+                    <div class="group-indent-wrapper">
+                      {% for sub in section.subsections %}
+                        <section id="{{ sub.id }}" class="text-block scroll-spy-target reveal-up">
+                          <h3>{{ sub.title }}</h3>
+                          <p>{{ sub.content }}</p>
+                        </section>
+                      {% endfor %}
+                    </div>
 
-                  {# --- TEXT --- #}
                   {% elif section.type == 'text' %}
                     <section id="{{ section.id }}" class="text-block scroll-spy-target reveal-up">
                       <h3>{{ section.title }}</h3>
                       <p>{{ section.content }}</p>
                     </section>
 
-                  {# --- LIST --- #}
                   {% elif section.type == 'list' %}
                     <section id="{{ section.id }}" class="text-block scroll-spy-target reveal-up">
                       <h3>{{ section.title }}</h3>
@@ -125,7 +106,6 @@
                       </ul>
                     </section>
 
-                  {# --- GRID --- #}
                   {% elif section.type == 'grid' %}
                     <section id="{{ section.id }}" class="text-block scroll-spy-target reveal-up">
                       <h3>{{ section.title }}</h3>
@@ -143,12 +123,16 @@
                 {% endif %}
               {% endfor %}
             {% endif %}
+
+            </div>
           </div>
         </div>
 
-        {# --- RIGHT COLUMN: Sidebar (Sticky & Rail) --- #}
+        {# --- RIGHT COLUMN: Sidebar (ToC + Links) --- #}
         <aside class="layout-sidebar">
           <div class="sticky-wrapper">
+
+            {# Module A: Table of Contents #}
             <div class="sidebar-module">
               <h4 class="sidebar-label">On this page</h4>
               <nav class="toc-nav">
@@ -161,14 +145,11 @@
                   {% if project.sections %}
                     {% for section in project.sections %}
                       {% if section.type == 'group' %}
-                        {# Parent #}
                         <a href="#{{ section.id }}" class="toc-link is-parent" data-cursor-ignore>{{ section.title }}</a>
-                        {# Children #}
                         {% for sub in section.subsections %}
                           <a href="#{{ sub.id }}" class="toc-link is-child" data-cursor-ignore>{{ sub.title }}</a>
                         {% endfor %}
                       {% else %}
-                        {# Standard #}
                         <a href="#{{ section.id }}" class="toc-link is-parent" data-cursor-ignore>{{ section.title }}</a>
                       {% endif %}
                     {% endfor %}
@@ -176,31 +157,48 @@
                 </div>
               </nav>
             </div>
+
+            {# Module B: Project Links (Buttons) #}
+            <div class="sidebar-module compact-section">
+              <h4 class="sidebar-label">Project Links</h4>
+              <div class="sidebar-actions">
+                {% if project.live_url %}
+                <a href="{{ project.live_url }}" target="_blank" class="sidebar-btn-primary">
+                  <i data-lucide="external-link"></i> Visit Live Site
+                </a>
+                {% endif %}
+                {% if project.code_url %}
+                <a href="{{ project.code_url }}" target="_blank" class="sidebar-btn-secondary">
+                  <i data-lucide="github"></i> View Source
+                </a>
+                {% endif %}
+              </div>
+            </div>
+
           </div>
         </aside>
 
       </div>
-                {# Navigation #}
-          <nav class="project-navigation reveal-up">
-            {% if prev_project %}
-            <a href="{{ url_for('portfolio.project_detail', project_id=prev_project.id) }}" class="nav-card prev">
-              <div class="nav-icon"><i data-lucide="arrow-left"></i></div>
-              <div class="nav-info">
-                <span class="nav-label">Previous Project</span>
-                <span class="nav-title">{{ prev_project.title }}</span>
-              </div>
-            </a>
-            {% else %}<div class="nav-spacer"></div>{% endif %}
-            {% if next_project %}
-            <a href="{{ url_for('portfolio.project_detail', project_id=next_project.id) }}" class="nav-card next">
-              <div class="nav-info">
-                <span class="nav-label">Next Project</span>
-                <span class="nav-title">{{ next_project.title }}</span>
-              </div>
-              <div class="nav-icon"><i data-lucide="arrow-right"></i></div>
-            </a>
-            {% endif %}
-          </nav>
+                  <nav class="project-navigation reveal-up">
+                {% if prev_project %}
+                <a href="{{ url_for('portfolio.project_detail', project_id=prev_project.id) }}" class="nav-card prev">
+                  <div class="nav-icon"><i data-lucide="arrow-left"></i></div>
+                  <div class="nav-info">
+                    <span class="nav-label">Previous Project</span>
+                    <span class="nav-title">{{ prev_project.title }}</span>
+                  </div>
+                </a>
+                {% else %}<div class="nav-spacer"></div>{% endif %}
+                {% if next_project %}
+                <a href="{{ url_for('portfolio.project_detail', project_id=next_project.id) }}" class="nav-card next">
+                  <div class="nav-info">
+                    <span class="nav-label">Next Project</span>
+                    <span class="nav-title">{{ next_project.title }}</span>
+                  </div>
+                  <div class="nav-icon"><i data-lucide="arrow-right"></i></div>
+                </a>
+                {% endif %}
+            </nav>
 
     </div>
   </article>
