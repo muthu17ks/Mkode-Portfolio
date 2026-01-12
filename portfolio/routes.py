@@ -25,6 +25,8 @@ from flask import (
 )
 from flask_mail import Message
 from . import portfolio_bp
+import time
+from datetime import datetime
 
 # Define paths for data files
 DATA_DIR = Path(__file__).parent / "data"
@@ -138,44 +140,44 @@ def download_resume():
 
 @portfolio_bp.route("/contact", methods=["POST"])
 def contact():
-    """Handles contact form submissions."""
     name = (request.form.get("name") or "").strip()
     email = (request.form.get("email") or "").strip()
     message = (request.form.get("message") or "").strip()
 
-    email_regex = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-    errors = []
+    now = datetime.now().strftime("%d %b %Y | %I:%M %p")
 
-    if not name: errors.append("Please enter your name.")
-    if not email: errors.append("Please enter your email address.")
-    elif not email_regex.match(email): errors.append("Please enter a valid email address.")
-    if not message: errors.append("Please enter a message.")
-    elif len(message) < 10: errors.append("Message is too short.")
-
-    if errors:
-        return jsonify({"status": "error", "message": errors[0]}), 400
+    # Validation
+    if not name or not email or len(message) < 10:
+        return jsonify({"status": "error", "message": "Valid name, email, and message required."}), 400
 
     recipient = os.getenv("MAIL_RECIPIENT") or current_app.config.get("MAIL_RECIPIENT")
-    mail = getattr(current_app, "mail", None) or current_app.extensions.get("mail")
-
-    if not recipient or not mail:
-        return jsonify({"status": "error", "message": "System configuration error."}), 500
-
-    msg = Message(
-        subject=f"Portfolio Contact from {name}",
-        sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
-        recipients=[recipient],
-        body=f"Name: {name}\nEmail: {email}\n\nMessage:\n{message}",
-    )
+    mail = current_app.extensions.get("mail")
 
     try:
-        msg.reply_to = email
-        mail.send(msg)
-        return jsonify({"status": "success", "message": "Message sent successfully!"}), 200
-    except Exception:
-        current_app.logger.exception("Failed to send email")
-        return jsonify({"status": "error", "message": "Failed to send email."}), 500
+        # 1. Notification (To You) - Clean Editorial Style
+        msg_to_self = Message(
+            subject=f"New portfolio message from {name}",
+            sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
+            recipients=[recipient]
+        )
+        msg_to_self.reply_to = email
+        msg_to_self.html = render_template("emails/notification.html",
+                                           name=name, email=email,
+                                           message=message, current_time=now)
+        mail.send(msg_to_self)
 
+        # 2. Auto-Reply (To Sender) - Clean Professional Style
+        msg_to_sender = Message(
+            subject="Message Received - Muthukumaran",
+            sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
+            recipients=[email]
+        )
+        msg_to_sender.html = render_template("emails/auto_reply.html", name=name)
+        mail.send(msg_to_sender)
+
+        return jsonify({"status": "success", "message": "Message sent successfully."}), 200
+    except Exception:
+        return jsonify({"status": "error", "message": "Failed to send message."}), 500
 
 @portfolio_bp.route("/api/search-data", methods=["GET"])
 def get_search_data():

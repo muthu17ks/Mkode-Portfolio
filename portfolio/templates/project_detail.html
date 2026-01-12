@@ -60,6 +60,20 @@
           </div>
           {% endif %}
 
+          {# --- NEW: MOBILE ACTION BAR (Hidden on Desktop) --- #}
+          <div class="mobile-project-actions reveal-up">
+             {% if project.live_url %}
+              <a href="{{ project.live_url }}" target="_blank" class="sidebar-btn-primary">
+                <i data-lucide="external-link"></i> Live Site
+              </a>
+              {% endif %}
+              {% if project.code_url %}
+              <a href="{{ project.code_url }}" target="_blank" class="sidebar-btn-secondary">
+                <i data-lucide="github"></i> Source
+              </a>
+              {% endif %}
+          </div>
+
           {# 2. TECH STACK (Moved Here) #}
           <div class="tech-stack-card reveal-up">
             <h4 class="card-label">Technologies Used</h4>
@@ -158,8 +172,8 @@
               </nav>
             </div>
 
-            {# Module B: Project Links (Buttons) #}
-            <div class="sidebar-module compact-section">
+            {# Module B: Project Links (Desktop Only) #}
+            <div class="sidebar-module compact-section desktop-links">
               <h4 class="sidebar-label">Project Links</h4>
               <div class="sidebar-actions">
                 {% if project.live_url %}
@@ -202,5 +216,15 @@
 
     </div>
   </article>
+
+  <div id="lightbox-modal" class="lightbox-modal">
+    <div class="lightbox-backdrop"></div>
+    <div class="lightbox-content">
+      <img id="lightbox-image" src="" alt="Full Screen View">
+    </div>
+    <button id="lightbox-close" class="lightbox-close-btn" aria-label="Close">
+      <i data-lucide="x"></i>
+    </button>
+  </div>
 
 {% endblock %}
