@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found | Muthukumaran{% endblock %}
+
+{% block navbar %}
+  {% include 'navbar.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="section-wrapper" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+  <div class="container" style="text-align: center;">
+
+    <div class="reveal-up">
+      <h1 style="font-size: clamp(3rem, 10vw, 8rem); font-weight: 800; color: hsl(var(--p-h), var(--p-s), 50%); margin: 0; line-height: 1;">
+        404
+      </h1>
+      <h2 style="font-size: 1.5rem; margin-top: 16px; margin-bottom: 24px; color: var(--color-text);">
+        Page Not Found
+      </h2>
+      <p style="max-width: 400px; margin: 0 auto 32px; color: var(--about-text-muted);">
+        The project or page you are looking for might have been moved, renamed, or doesn't exist.
+      </p>
+
+      <a href="{{ url_for('portfolio.home') }}" class="btn-main">
+        <i data-lucide="home"></i>
+        <span>Return Home</span>
+      </a>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+      lucide.createIcons();
+    }
+  </script>
+{% endblock %}

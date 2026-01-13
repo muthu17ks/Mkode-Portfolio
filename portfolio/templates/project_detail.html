@@ -6,6 +6,18 @@
   {% include 'navbar.html' %}
 {% endblock %}
 
+{# === NEW: DYNAMIC SEO TAGS === #}
+{% block meta %}
+  <meta name="description" content="{{ project.desc }}" />
+  <meta property="og:title" content="{{ project.title }} | Project Case Study" />
+  <meta property="og:description" content="{{ project.desc }}" />
+  <meta property="og:type" content="article" />
+  {# Use the first image as the social preview, or fallback to hero avatar if none exist #}
+  {% set share_image = project.images[0] if project.images and project.images|length > 0 else url_for('portfolio.static', filename='images/hero-portrait-muthu.jpg') %}
+  <meta property="og:image" content="{{ share_image }}" />
+{% endblock %}
+{# ============================== #}
+
 {% block content %}
 
   <article class="project-page">
@@ -60,7 +72,7 @@
           </div>
           {% endif %}
 
-          {# --- NEW: MOBILE ACTION BAR (Hidden on Desktop) --- #}
+          {# --- MOBILE ACTION BAR (Hidden on Desktop) --- #}
           <div class="mobile-project-actions reveal-up">
              {% if project.live_url %}
               <a href="{{ project.live_url }}" target="_blank" class="sidebar-btn-primary">
@@ -74,7 +86,7 @@
               {% endif %}
           </div>
 
-          {# 2. TECH STACK (Moved Here) #}
+          {# 2. TECH STACK #}
           <div class="tech-stack-card reveal-up">
             <h4 class="card-label">Technologies Used</h4>
             <div class="sidebar-tech-row">

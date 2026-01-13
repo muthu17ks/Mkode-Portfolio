@@ -1,6 +1,7 @@
 Flask
 Flask-Mail
 Flask-WTF
+Flask-Limiter
 python-dotenv
 email_validator
 pymongo
