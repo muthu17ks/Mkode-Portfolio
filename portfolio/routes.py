@@ -24,10 +24,9 @@ from flask import (
     url_for,
 )
 from flask_mail import Message
-from . import portfolio_bp, limiter  # Import limiter
+from . import portfolio_bp, limiter
 from datetime import datetime
 
-# Define paths for data files
 DATA_DIR = Path(__file__).parent / "data"
 PROJECTS_JSON = DATA_DIR / "projects.json"
 SITE_DATA_JSON = DATA_DIR / "site_data.json"
@@ -49,9 +48,6 @@ def load_json_data(path, default=None):
         current_app.logger.exception(f"Failed to load {path.name}")
         return default
 
-# ==========================================
-# Caching Logic (Performance Optimization)
-# ==========================================
 @lru_cache(maxsize=1)
 def get_cached_projects():
     """Reads projects.json once and stores in RAM."""
@@ -63,22 +59,15 @@ def get_cached_site_data():
     return load_json_data(SITE_DATA_JSON, default={})
 
 
-# ==========================================
-# Error Handlers
-# ==========================================
 @portfolio_bp.app_errorhandler(404)
 def page_not_found(e):
     """Renders a custom 404 error page."""
     return render_template('404.html'), 404
 
 
-# ==========================================
-# Routes
-# ==========================================
 @portfolio_bp.route("/", methods=["GET"])
 def home():
     """Renders the homepage."""
-    # Use Cached Data
     projects = get_cached_projects()
     site_data = get_cached_site_data()
 
@@ -108,7 +97,6 @@ def home():
 @portfolio_bp.route("/projects", methods=["GET"])
 def all_projects():
     """Renders the full list of projects."""
-    # Use Cached Data
     projects = get_cached_projects()
     return render_template("projects.html", projects=projects)
 
@@ -116,7 +104,6 @@ def all_projects():
 @portfolio_bp.route("/project/<project_id>", methods=["GET"])
 def project_detail(project_id):
     """Renders the dedicated project detail page."""
-    # Use Cached Data
     projects = get_cached_projects()
     project = next((p for p in projects if p["id"] == project_id), None)
 
@@ -167,16 +154,20 @@ def download_resume():
 
 
 @portfolio_bp.route("/contact", methods=["POST"])
-@limiter.limit("2 per minute; 5 per hour") # HR-Friendly Spam Protection
+@limiter.limit("2 per minute; 5 per hour")
 def contact():
+    """
+    Handles contact form submissions.
+
+    Validates the input, sends a notification email to the portfolio owner,
+    and sends an auto-reply to the sender via SMTP.
+    """
     name = (request.form.get("name") or "").strip()
     email = (request.form.get("email") or "").strip()
     message = (request.form.get("message") or "").strip()
 
-    # Explicitly state UTC to avoid confusion
     now = datetime.now().strftime("%d %b %Y | %I:%M %p UTC")
 
-    # Validation
     if not name or not email or len(message) < 10:
         return jsonify({"status": "error", "message": "Valid name, email, and message required."}), 400
 
@@ -184,7 +175,6 @@ def contact():
     mail = current_app.extensions.get("mail")
 
     try:
-        # 1. Notification (To You)
         msg_to_self = Message(
             subject=f"New portfolio message from {name}",
             sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
@@ -196,7 +186,6 @@ def contact():
                                            message=message, current_time=now)
         mail.send(msg_to_self)
 
-        # 2. Auto-Reply (To Sender)
         msg_to_sender = Message(
             subject="Message Received - Muthukumaran",
             sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
@@ -209,17 +198,16 @@ def contact():
     except Exception:
         return jsonify({"status": "error", "message": "Failed to send message."}), 500
 
+
 @portfolio_bp.route("/api/search-data", methods=["GET"])
 def get_search_data():
     """
     API endpoint for Command Palette.
     Returns structured data for Pages, Projects, Socials, etc.
     """
-    # Use Cached Data
     projects_data = get_cached_projects()
     site_data = get_cached_site_data()
 
-    # 1. Pages
     pages = [
         {"id": "home", "title": "Home", "desc": "Go to Homepage", "url": url_for('portfolio.home'), "icon": "home",
          "group": "Pages", "tokens": "landing index"},
@@ -235,7 +223,6 @@ def get_search_data():
          "icon": "mail", "group": "Pages", "tokens": "email hire"},
     ]
 
-    # 2. Projects
     all_projects_list = []
     for p in projects_data:
         tags_display = " • ".join(p.get("tags", [])[:3])
@@ -252,7 +239,6 @@ def get_search_data():
             "tokens": p.get("tagline", "").lower()
         })
 
-    # 3. Connect (Socials)
     socials = []
     if "socials" in site_data:
         for s in site_data["socials"]:
@@ -267,7 +253,6 @@ def get_search_data():
                 "tokens": s.get('handle', '').replace('@', '').lower()
             })
 
-    # 4. Resume
     resume = [{
         "id": "resume",
         "title": "View Resume",
@@ -285,6 +270,7 @@ def get_search_data():
         "connect": socials,
         "resume": resume
     })
+
 
 @portfolio_bp.route("/legal", methods=["GET"])
 def legal():

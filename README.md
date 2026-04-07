@@ -25,7 +25,7 @@ A high-performance personal portfolio website designed to showcase projects and 
 
 1.  **Clone the repository**
     ```bash
-    git clone [https://github.com/YOUR_USERNAME/flask-portfolio.git](https://github.com/YOUR_USERNAME/flask-portfolio.git)
+    git clone https://github.com/mkode-muthu/flask-portfolio.git
     cd flask-portfolio
     ```
 

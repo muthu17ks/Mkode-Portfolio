@@ -76,133 +76,110 @@
     ]
   },
   {
-    "id": "familyconnect",
-    "title": "FamilyConnect",
-    "tagline": "M.Sc. Final Project \u2014 Private social messaging prototype",
-    "last_updated": "Jan 2025",
-    "desc": "A private social feed for families with secure auth and image optimization.",
+    "id": "mkode-store",
+    "title": "Mkode Store",
+    "tagline": "Full-Stack E-Commerce Platform",
+    "last_updated": "April 2026",
+    "desc": "A complete, production-ready digital storefront built with React and Django REST Framework, featuring secure JWT authentication and Razorpay payment integration.",
     "images": [
-      "/portfolio/static/images/project-family-connect-thumb.png"
+      "/portfolio/static/images/project-mkode-store-thumb-1.png",
+      "/portfolio/static/images/project-portfolio-thumb-2.png"
     ],
     "highlights": [
-      "Secure Auth System",
-      "Server-side Image Compression",
-      "Normalized MySQL Schema"
+      "Django REST API",
+      "React Frontend",
+      "Razorpay Integration",
+      "JWT Authentication"
     ],
     "tags": [
-      "Flask",
+      "React",
+      "Django",
       "Python",
-      "MySQL",
-      "Security"
+      "JavaScript",
+      "Razorpay",
+      "JWT"
     ],
-    "live_url": "",
-    "code_url": "https://github.com/muthu17ks/FamilyConnect",
+    "live_url": "https://mkode-store.vercel.app",
+    "code_url": "https://github.com/muthu17ks/mkode-store",
     "featured": true,
     "sections": [
       {
         "id": "preview",
-        "title": "App Visuals",
+        "title": "Storefront",
         "type": "carousel"
       },
       {
         "id": "overview",
         "title": "Overview",
         "type": "text",
-        "content": "FamilyConnect is a private social networking prototype designed to simulate the core architecture of platforms like Facebook, but optimized for close-knit family groups with a focus on privacy. Public social networks monetize user data and expose family memories to the public internet."
+        "content": "Mkode Store is a comprehensive digital asset marketplace. It serves as an end-to-end e-commerce solution, allowing users to browse projects, add items to a secure cart, and complete purchases using the Razorpay payment gateway."
       },
       {
-        "id": "features",
-        "title": "Core Modules",
-        "type": "list",
-        "content_items": [
-          "Secure Authentication (BCrypt)",
-          "Image Processing Pipeline",
-          "Relational Feed Algorithm",
-          "Admin Dashboard"
-        ]
+        "id": "problem",
+        "title": "The Problem",
+        "type": "text",
+        "content": "Building a secure digital storefront requires balancing complex payment processing, reliable user authentication, and fast media delivery. Monolithic architectures often struggle to scale these distinct concerns efficiently without becoming rigid and difficult to maintain."
       },
       {
-        "id": "challenges",
-        "title": "Challenges",
-        "type": "grid",
-        "content_items": [
+        "id": "solution_group",
+        "title": "The Solution",
+        "type": "group",
+        "subsections": [
           {
-            "title": "Database Normalization",
-            "desc": "Efficiently linking Users, Posts, and Comments (nested relationships) was critical. I had to carefully define Foreign Keys and indexing strategies to prevent N+1 query performance issues."
+            "id": "architecture",
+            "title": "Decoupled Architecture",
+            "content": "Utilized Django REST Framework to build a robust, scalable backend API completely decoupled from the responsive React frontend, allowing independent scaling and complex client-side state management for shopping carts."
+          },
+          {
+            "id": "security",
+            "title": "Auth & Payments",
+            "content": "Implemented stateless JWT authentication for secure session management alongside a rigorous Razorpay checkout flow that relies on strict cryptographic signature verification on the backend to prevent tampering."
+          },
+          {
+            "id": "optimization",
+            "title": "Media Optimization",
+            "content": "Developed an automated, on-the-fly Python image compression pipeline using Pillow that converts user uploads to WebP format, significantly reducing payload bandwidth and improving frontend rendering times."
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "workplace",
-    "title": "Workplace",
-    "tagline": "M.Sc. Mini Project \u2014 Academic team workflow hub",
-    "last_updated": "Dec 2024",
-    "desc": "A centralized dashboard for student teams to manage tasks and documents.",
-    "images": [
-      "/portfolio/static/images/project-workspace-thumb.png"
-    ],
-    "highlights": [
-      "Role-Based Access Control",
-      "Kanban-style Tracker",
-      "Document Repository"
-    ],
-    "tags": [
-      "Flask",
-      "Python",
-      "Bootstrap",
-      "MySQL",
-      "RBAC"
-    ],
-    "live_url": "",
-    "code_url": "https://github.com/muthu17ks/workplace",
-    "featured": true,
-    "sections": [
-      {
-        "id": "preview",
-        "title": "Dashboard",
-        "type": "carousel"
-      },
-      {
-        "id": "overview",
-        "title": "Overview",
-        "type": "text",
-        "content": "Workplace is a collaborative task management hub designed specifically for academic teams. It solves the problem of fragmented communication by providing a single dashboard for tracking deadlines, sharing resources, and managing project milestones. Think of it as a simplified Trello or Asana."
       },
       {
         "id": "features",
-        "title": "Features",
+        "title": "Key Features",
         "type": "list",
         "content_items": [
-          "RBAC System",
-          "Document Repository",
-          "Task State Machine",
-          "Activity Logging"
+          "Secure user registration and JWT authentication",
+          "Persistent shopping cart functionality",
+          "Integrated Razorpay checkout flow with signature verification",
+          "Admin dashboard for revenue and customer analytics",
+          "Automated on-the-fly image compression to WebP"
         ]
       }
     ]
   },
   {
     "id": "tic-tac-toe-game",
-    "title": "Tic Tac Toe AI",
-    "tagline": "Python graphics project with custom AI engine",
-    "last_updated": "Nov 2024",
-    "desc": "A graphical game built from scratch using Python Turtle with a custom AI.",
-    "images": [],
+    "title": "Tic Tac Toe Game",
+    "tagline": "Graphical game with custom UI engine and AI opponent",
+    "last_updated": "April 2026",
+    "desc": "A complete graphical implementation of Tic Tac Toe built with Python's Turtle module, featuring a custom-built UI engine, persistent statistics, and a heuristic AI opponent.",
+    "images": [
+      "/portfolio/static/images/project-tic-tac-toe-thumb-1.png",
+      "/portfolio/static/images/project-tic-tac-toe-thumb-2.png",
+      "/portfolio/static/images/project-tic-tac-toe-thumb-3.png"
+    ],
     "highlights": [
-      "Custom Rendering Loop",
-      "Heuristic AI Opponent",
-      "Persistent High-Scores"
+      "Custom UI Engine",
+      "Persistent Statistics",
+      "Heuristic AI"
     ],
     "tags": [
       "Python",
       "Turtle Graphics",
-      "Game AI",
-      "Algorithms"
+      "JSON",
+      "Game Dev"
     ],
     "live_url": "",
-    "code_url": "https://github.com/muthu17ks/Tic-Tac-Toe-Game",
+    "code_url": "#",
     "featured": true,
     "sections": [
       {
@@ -214,66 +191,62 @@
         "id": "overview",
         "title": "Overview",
         "type": "text",
-        "content": "A graphical implementation of the classic Tic Tac Toe game, featuring a custom-built AI opponent. This project served as a deep study in game state management, heuristic algorithms, and rendering graphics using Python's Turtle module."
+        "content": "Tic Tac Toe Game is a comprehensive graphical game built entirely from scratch using Python's Turtle graphics library. It bypasses standard GUI frameworks by implementing its own custom rendering engine to handle interactive buttons, modal dialogs, and smooth animations, while maintaining lifetime player statistics via local file storage."
       },
       {
-        "id": "challenges",
-        "title": "AI Logic",
+        "id": "engineering_group",
+        "title": "Core Engineering",
+        "type": "group",
+        "subsections": [
+          {
+            "id": "ui_engine",
+            "title": "Custom UI Engine",
+            "content": "Developed a custom graphics pipeline with manual tracer control to draw rounded rectangles with drop shadows. The engine includes an event listener system that registers button coordinates and maps physical mouse clicks to logical UI actions."
+          },
+          {
+            "id": "ai_logic",
+            "title": "Heuristic AI Engine",
+            "content": "Built a priority-based AI opponent for single-player mode. The algorithm evaluates the board state on every turn, prioritizing instant wins, then blocking immediate player threats, before falling back to center-control or random availability."
+          },
+          {
+            "id": "persistence",
+            "title": "Data Persistence",
+            "content": "Engineered a local storage layer using Python's native JSON module. The game seamlessly loads and saves lifetime statistics (wins, losses, draws) for both PvP and PvAI game modes, displaying them on a dedicated leaderboard screen."
+          }
+        ]
+      },
+      {
+        "id": "technical_challenges",
+        "title": "Technical Solutions",
         "type": "grid",
         "content_items": [
           {
             "title": "Coordinate Mapping",
-            "desc": "The hardest part was translating pixel-perfect mouse clicks on the canvas (e.g., x=150, y=200) to the logical 3x3 game matrix (row=0, col=2) to update the internal state correctly."
+            "desc": "Translated complex, pixel-perfect screen coordinates (e.g., x: -200, y: 150) from the user's mouse clicks into a normalized 0-8 logical grid index to accurately update the underlying game state array."
+          },
+          {
+            "title": "Animation Handling",
+            "desc": "Implemented frame-by-frame iterative drawing for the winning line animation. Using a dedicated 'anim_pen' and controlled time-sleeps prevented the main application loop from freezing during state transitions."
           }
+        ]
+      },
+      {
+        "id": "features",
+        "title": "Key Features",
+        "type": "list",
+        "content_items": [
+          "Single Player (AI) and Two Player (PvP) modes",
+          "Decoupled rendering controllers (UI, Game, Animation, Popup)",
+          "Persistent leaderboard tracking across sessions",
+          "Dynamic modal overlays for game-over states"
         ]
       }
     ]
   },
   {
-    "id": "departmental-website",
-    "title": "Departmental Portal",
-    "tagline": "B.Sc. Final Project \u2014 Digital notice board & CMS",
-    "last_updated": "Aug 2023",
-    "desc": "A digital portal for university faculty and students with a custom CMS.",
-    "images": [],
-    "highlights": [
-      "Custom CMS for Faculty",
-      "Mobile-First Design",
-      "Secure Admin Panel"
-    ],
-    "tags": [
-      "HTML",
-      "CSS",
-      "JavaScript",
-      "PHP/MySQL"
-    ],
-    "live_url": "",
-    "code_url": "https://github.com/muthu17ks/Departmental-Website",
-    "featured": false,
-    "sections": [
-      {
-        "id": "overview",
-        "title": "Overview",
-        "type": "text",
-        "content": "A comprehensive digital portal for the Computer Science department, developed to digitize the traditional notice board. It provides a CMS for faculty members to publish news and a responsive interface for students to access exam schedules, syllabus materials, and event announcements."
-      },
-      {
-        "id": "features",
-        "title": "Capabilities",
-        "type": "list",
-        "content_items": [
-          "Custom CMS for Faculty (CRUD operations)",
-          "PDF Viewer Integration for notices",
-          "Search & Filter by Year/Semester",
-          "Mobile Responsive Layout"
-        ]
-      }
-    ]
-  },
-{
     "id": "watermark-studio",
     "title": "Watermark Studio",
-    "tagline": "Desktop & Web Hybrid — Professional Branding Utility",
+    "tagline": "Desktop & Web Hybrid \u2014 Professional Branding Utility",
     "last_updated": "Jan 2026",
     "desc": "A dual-platform branding tool (Desktop EXE + Streamlit Cloud) designed for high-performance batch image processing with professional alpha-compositing.",
     "images": [
@@ -294,7 +267,7 @@
     ],
     "live_url": "https://watermark-studio.streamlit.app/",
     "code_url": "https://github.com/muthu17ks/Watermark-Studio",
-    "featured": true,
+    "featured": false,
     "sections": [
       {
         "id": "preview",

@@ -4,46 +4,26 @@
     "role": "Full-Stack Developer",
     "hi_text": "Hi, I\u2019m",
     "blurb": "Python-first fresher building reliable, scalable web apps with clean code, accessible UX, and a polished visual finish.",
-    "avatar_image": "portfolio/static/images/hero-portrait-muthu.jpg",
-    "socials": [
-      {
-        "name": "Email",
-        "url": "mailto:muthu17@gmail.com",
-        "icon": "mail",
-        "handle": "muthu17@gmail.com"
-      },
-      {
-        "name": "LinkedIn",
-        "url": "https://linkedin.com/in/yourprofile",
-        "icon": "linkedin",
-        "handle": "@muthukumaran"
-      },
-      {
-        "name": "GitHub",
-        "url": "https://github.com/muthu17ks",
-        "icon": "github",
-        "handle": "@muthu17ks"
-      }
-    ]
+    "avatar_image": "portfolio/static/images/hero-portrait-muthu.jpg"
   },
   "socials": [
     {
       "name": "Email",
-      "url": "mailto:muthu17@gmail.com",
+      "url": "mailto:muthu.mkode@gmail.com",
       "icon": "mail",
-      "handle": "muthu17@gmail.com"
+      "handle": "muthu.mkode@gmail.com"
     },
     {
       "name": "LinkedIn",
-      "url": "https://linkedin.com/in/yourprofile",
+      "url": "https://www.linkedin.com/in/muthu-mkode",
       "icon": "linkedin",
-      "handle": "@muthukumaran"
+      "handle": "@muthu-mkode"
     },
     {
       "name": "GitHub",
-      "url": "https://github.com/muthu17ks",
+      "url": "https://github.com/Muthu-Mkode",
       "icon": "github",
-      "handle": "@muthu17ks"
+      "handle": "@Muthu-Mkode"
     }
   ],
   "tech_stack": [
@@ -53,9 +33,9 @@
       "category": "Language"
     },
     {
-      "name": "JavaScript",
-      "icon": "devicon-javascript-plain colored",
-      "category": "Language"
+      "name": "Django",
+      "icon": "devicon-django-plain colored",
+      "category": "Framework"
     },
     {
       "name": "Flask",
@@ -68,6 +48,11 @@
       "category": "Framework"
     },
     {
+      "name": "JavaScript",
+      "icon": "devicon-javascript-plain colored",
+      "category": "Language"
+    },
+    {
       "name": "HTML5",
       "icon": "devicon-html5-plain colored",
       "category": "Language"
@@ -78,19 +63,9 @@
       "category": "Language"
     },
     {
-      "name": "Bootstrap",
-      "icon": "devicon-bootstrap-plain colored",
-      "category": "Framework"
-    },
-    {
       "name": "MySQL",
       "icon": "devicon-mysql-original colored",
       "category": "Database"
-    },
-    {
-      "name": "Pycharm",
-      "icon": "devicon-pycharm-plain colored",
-      "category": "Tool"
     },
     {
       "name": "Git",
@@ -100,6 +75,11 @@
     {
       "name": "GitHub",
       "icon": "devicon-github-original",
+      "category": "Tool"
+    },
+    {
+      "name": "Pycharm",
+      "icon": "devicon-pycharm-plain colored",
       "category": "Tool"
     },
     {

@@ -8,14 +8,9 @@
 
 {% block content %}
 
-  {#
-     Added class 'all-projects-view' to handle padding/min-height via CSS
-     instead of inline styles.
-  #}
   <section class="section-wrapper projects-section all-projects-view">
     <div class="container">
 
-      {# --- Back Button (Top) --- #}
       <div class="projects-header-nav">
         <a href="{{ url_for('portfolio.home') }}#projects" class="link-archive back-link">
           <i data-lucide="arrow-left"></i> Back to Home
@@ -31,7 +26,6 @@
 
       <div class="projects-stack">
         {% for p in projects %}
-          {# Safe Defaults #}
           {% set pid = (p.id | default('proj-' ~ loop.index)) %}
           {% set title = p.title | default('Untitled Project') %}
           {% set desc = p.desc | default('Project description coming soon.') %}
@@ -43,12 +37,7 @@
 
           <article class="project-card" id="project-{{ pid | replace(' ', '-') | lower }}">
 
-            {# Left Column: Media #}
             <div class="project-card__media">
-              {#
-                 Link points to internal Detail Page.
-                 Added 'from=archive' so the Back button knows to return here.
-              #}
               <a href="{{ url_for('portfolio.project_detail', project_id=p.id, from='archive') }}"
                  class="media-inner"
                  data-cursor-ignore>
@@ -73,7 +62,6 @@
               </a>
             </div>
 
-            {# Right Column: Content #}
             <div class="project-card__content">
               <h3 class="project-title">{{ title }}</h3>
               <p class="project-desc">{{ desc }}</p>
@@ -95,7 +83,6 @@
                 {% endfor %}
               </div>
 
-              {# Buttons reverted to Original Style (btn-main) and External Links #}
               <div class="project-actions">
                 {% if live %}
                 <a href="{{ live }}" target="_blank" rel="noopener" class="btn-main" aria-label="Live Demo">

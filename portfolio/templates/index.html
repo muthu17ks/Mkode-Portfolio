@@ -16,9 +16,6 @@
 
 {% block content %}
 
-  {# ==============================
-     Section: Hero
-  ============================== #}
   <section id="main" class="hero">
     <div class="hero__grid">
 
@@ -55,9 +52,6 @@
     </div>
   </section>
 
-{# ==============================
-     Section: About
-  ============================== #}
   <section id="about" class="about-section">
     <div class="bg-pattern"></div>
 
@@ -100,7 +94,7 @@
 
               <div class="tech-grid">
                 {% for tech in data.tech_stack %}
-                <div class="tech-item">
+                <div class="tech-item" title="{{ tech.category }}">
                   <i class="{{ tech.icon }}" aria-hidden="true"></i>
                   <span>{{ tech.name }}</span>
                 </div>
@@ -114,9 +108,6 @@
     </div>
   </section>
 
-  {# ==============================
-     Section: Featured Projects
-  ============================== #}
   <section id="projects" class="section-wrapper projects-section">
     <div class="container">
 
@@ -130,16 +121,11 @@
       <div class="projects-stack">
         {% for p in featured_main %}
 
-        {# Define Image Logic: Get first image from list, or fallback #}
         {% set thumb_image = p.images[0] if p.images and p.images|length > 0 else url_for('portfolio.static', filename='images/project-placeholder-thumb.png') %}
 
         <article class="project-card" id="project-{{ p.id | replace(' ', '-') | lower }}">
 
           <div class="project-card__media">
-            {#
-               1. Link points to internal project_detail
-               2. Includes ?from=home for the back button logic
-            #}
             <a href="{{ url_for('portfolio.project_detail', project_id=p.id, from='home') }}" class="media-inner" rel="noopener">
               {% if p.tagline %}
               <div class="media-hook">
@@ -154,7 +140,6 @@
               {% endif %}
 
               <div class="media-image-container">
-                {# UPDATED: Uses 'thumb_image' variable set above #}
                 <img src="{{ thumb_image }}"
                      alt="{{ p.title }} Preview" loading="lazy" decoding="async">
               </div>
@@ -179,7 +164,6 @@
               {% endfor %}
             </div>
 
-            {# Actions #}
             <div class="project-actions">
               {% if p.live_url %}
               <a href="{{ p.live_url }}" target="_blank" rel="noopener" class="btn-main" aria-label="Live Demo">
@@ -210,9 +194,6 @@
     </div>
   </section>
 
-  {# ==============================
-     Section: Awards & Honours
-  ============================== #}
   <section id="awards" class="section-wrapper awards-section">
     <div class="container">
 
@@ -243,9 +224,6 @@
     </div>
   </section>
 
-  {# ==============================
-     Section: Contact
-  ============================== #}
   <section id="contact" class="section-wrapper contact-section">
     <div class="container">
 
@@ -258,15 +236,11 @@
           </p>
 
           <nav class="contact-links">
-            <a class="contact-chip" href="mailto:muthu17@gmail.com">
-              <i data-lucide="mail"></i> <span>muthu17@gmail.com</span>
+            {% for social in data.socials %}
+            <a class="contact-chip" href="{{ social.url }}" {% if social.name != 'Email' %}target="_blank" rel="noopener"{% endif %}>
+              <i data-lucide="{{ social.icon }}"></i> <span>{{ social.handle }}</span>
             </a>
-            <a class="contact-chip" href="https://github.com/" target="_blank">
-              <i data-lucide="github"></i> <span>GitHub</span>
-            </a>
-            <a class="contact-chip" href="https://linkedin.com/" target="_blank">
-              <i data-lucide="linkedin"></i> <span>LinkedIn</span>
-            </a>
+            {% endfor %}
           </nav>
         </aside>
 

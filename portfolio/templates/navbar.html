@@ -1,6 +1,5 @@
 <header class="navbar" role="banner">
 
-  {# 1. Define variables to check current page #}
   {% set is_home = request.endpoint == 'portfolio.home' %}
   {% set home_url = url_for('portfolio.home') %}
 

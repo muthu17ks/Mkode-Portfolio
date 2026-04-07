@@ -169,7 +169,21 @@ body { margin: 0; font-family: var(--font-primary); font-size: var(--font-size-b
 .navbar__logo-img { width: auto; height: var(--size-logo); }
 .navbar__center-group { justify-self: center; display: flex; align-items: center; gap: var(--space-16); pointer-events: none; }
 .navbar__center-group > * { pointer-events: auto; }
-.navbar__menu { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 46px; padding: 0 4px; pointer-events: auto; background: color-mix(in srgb, var(--color-surface), transparent 40%); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border: 1px solid var(--color-border); border-radius: var(--radius-pill); transition: all 0.3s ease; }
+.navbar__menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 46px;
+  padding: 0 4px;
+  pointer-events: auto;
+  background: color-mix(in srgb, var(--color-surface), white 10%);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  transition: all 0.3s ease;
+}
 .navbar__menu a { text-decoration: none; color: var(--color-text); font-size: var(--font-size-sm); font-weight: 500; padding: 8px 16px; border-radius: var(--radius-pill); transition: all 0.2s; }
 .navbar__menu a:hover, .navbar__menu a.is-active { background-color: hsla(var(--p-h), var(--p-s), 50%, 0.12); color: var(--color-btn-bg); font-weight: 600; }
 .navbar__glass-btn, .navbar__theme-toggle { display: inline-flex; align-items: center; justify-content: center; height: 40px; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--color-surface), transparent 40%); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border: 1px solid var(--color-border); color: var(--color-text); cursor: pointer; pointer-events: auto; transition: all 0.2s; }
